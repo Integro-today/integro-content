@@ -16,6 +16,8 @@ eggs/
 .eggs/
 lib/
 lib64/
+# But allow frontend lib (Next.js utilities)
+!frontend/lib/
 parts/
 sdist/
 var/
