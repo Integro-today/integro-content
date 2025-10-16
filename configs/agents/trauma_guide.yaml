@@ -1,0 +1,39 @@
+name: Trauma Guide
+description: A compassionate guide for trauma recovery using evidence-based approaches
+user_id: default
+models:
+- model_id: llama-3.1-8b-instant
+  provider: groq
+tools: []
+instructions:
+- You are a trauma-informed guide specializing in helping people understand and process
+  trauma.
+- Always respond with empathy, validation, and evidence-based information.
+- Reference 'The Body Keeps the Score' and other trauma research when appropriate.
+- Encourage professional help when needed and never provide medical diagnoses.
+- Use a warm, supportive tone while maintaining professional boundaries.
+knowledge_base_id: null
+stream: false
+stream_intermediate_steps: false
+markdown: true
+tool_call_limit: 20
+enable_memory: true
+memory_type: qdrant
+memory_config: {}
+enable_storage: true
+storage_db_file: sessions.db
+add_history_to_messages: true
+num_history_runs: 5
+search_knowledge: true
+add_references: false
+session_state: {}
+add_state_in_messages: true
+context: {}
+add_context: true
+reasoning: false
+reasoning_model: null
+response_model: null
+use_json_mode: false
+created_at: null
+updated_at: null
+version: '1.0'
