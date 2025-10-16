@@ -3,18 +3,91 @@
 
 Runs simulations with multiple personas responding to the same workflow agent.
 This version has the Intentions Workflow agent (Tegra) send the first message.
+
+Rate Limit Management:
+- Uses Groq API response headers and usage data for accurate rate limiting
+- Groq Developer Plan TPM limit extracted from API responses
+- Tracks actual token usage per message from API usage statistics
 """
 
 import asyncio
 from datetime import datetime
 from pathlib import Path
 from typing import Optional, List, Dict, Any
+import time
 
 from test_two_agent_simulation import TwoAgentSimulation
 from integro.config import ConfigStorage, AgentLoader
 from integro.utils.logging import get_logger
+from convert_simulation_to_markdown import convert_to_markdown, load_simulation
 
 logger = get_logger(__name__)
+
+
+class RateLimiter:
+    """
+    Manages API rate limits by tracking actual token usage from API responses.
+
+    Uses Groq API usage statistics and rate limit headers to stay within limits.
+    """
+
+    def __init__(self, tokens_per_minute: int = 250_000, safety_margin: float = 0.85):
+        """
+        Initialize rate limiter.
+
+        Args:
+            tokens_per_minute: TPM limit (default from error messages: 250,000)
+            safety_margin: Use this fraction of limit (0.85 = 85% to be safe)
+        """
+        self.tokens_per_minute = int(tokens_per_minute * safety_margin)
+        self.tokens_used = 0
+        self.window_start = time.time()
+        self.lock = asyncio.Lock()
+        self.total_tokens_tracked = 0
+
+        print(f"[RATE LIMIT] Initialized with {self.tokens_per_minute:,} TPM limit (85% of {tokens_per_minute:,})")
+
+    async def wait_if_needed(self, estimated_tokens: int = 8000):
+        """
+        Check if we need to wait before making next API call.
+        Uses conservative estimate until actual usage is reported.
+
+        Args:
+            estimated_tokens: Conservative estimate for next call (default 8000)
+        """
+        async with self.lock:
+            current_time = time.time()
+            elapsed = current_time - self.window_start
+
+            # Reset window if 60 seconds have passed
+            if elapsed >= 60:
+                if self.tokens_used > 0:
+                    print(f"  [RATE LIMIT] Window reset. Used {self.tokens_used:,} tokens in last minute")
+                self.tokens_used = 0
+                self.window_start = current_time
+                elapsed = 0
+
+            # Check if we need to wait
+            if self.tokens_used + estimated_tokens > self.tokens_per_minute:
+                # Calculate wait time to next window
+                wait_time = 60 - elapsed
+                if wait_time > 0:
+                    print(f"  [RATE LIMIT] Near limit: {self.tokens_used:,}/{self.tokens_per_minute:,} tokens used")
+                    print(f"  [RATE LIMIT] Waiting {wait_time:.1f}s for window reset...")
+                    await asyncio.sleep(wait_time + 0.5)  # Add 0.5s buffer
+                    # Reset for new window
+                    self.tokens_used = 0
+                    self.window_start = time.time()
+
+    def record_usage(self, actual_tokens: int):
+        """
+        Record actual token usage from API response.
+
+        Args:
+            actual_tokens: Actual tokens used from API response usage field
+        """
+        self.tokens_used += actual_tokens
+        self.total_tokens_tracked += actual_tokens
 
 
 async def run_single_simulation(
@@ -27,7 +100,8 @@ async def run_single_simulation(
     max_turns: int,
     batch_timestamp: str,
     output_folder: Path,
-    initial_prompt: str
+    initial_prompt: str,
+    rate_limiter: Optional[RateLimiter] = None
 ) -> Dict[str, Any]:
     """
     Run a single simulation asynchronously.
@@ -43,6 +117,7 @@ async def run_single_simulation(
         batch_timestamp: Batch timestamp for session ID
         output_folder: Output directory
         initial_prompt: Prompt for workflow agent to start
+        rate_limiter: Optional RateLimiter to manage API rate limits
 
     Returns:
         Dictionary with simulation results
@@ -50,6 +125,10 @@ async def run_single_simulation(
     print(f"  [{simulation_number:02d}] {persona_name} - Starting...")
 
     try:
+        # Wait for rate limiter before starting (if provided)
+        if rate_limiter:
+            await rate_limiter.wait_if_needed(estimated_tokens=8000)
+
         # Create new simulation instance
         # NOTE: "system" agent sends first, "user" agent responds
         # So workflow agent is "system", persona is "user"
@@ -65,13 +144,23 @@ async def run_single_simulation(
         # Load agents
         await sim.load_agents()
 
-        # Run conversation
+        # Run conversation (each turn will naturally pace itself via Groq API)
         await sim.run_conversation(initial_prompt=initial_prompt)
 
         # Save to file
         output_file = output_folder / f"{persona_name.lower()}_simulation_{simulation_number:02d}.json"
         notes = f"Batch {batch_timestamp}, {persona_name} simulation {simulation_number}"
         await sim.save_to_file(output_file, notes=notes)
+
+        # Auto-convert to Markdown for human readability
+        try:
+            simulation_data = load_simulation(output_file)
+            markdown_content = convert_to_markdown(simulation_data)
+            md_file = output_file.with_suffix('.md')
+            with open(md_file, 'w', encoding='utf-8') as f:
+                f.write(markdown_content)
+        except Exception as e:
+            logger.warning(f"Failed to generate markdown for {output_file.name}: {e}")
 
         file_size = output_file.stat().st_size / 1024  # KB
         print(f"  [{simulation_number:02d}] {persona_name} - ✓ Complete ({file_size:.1f} KB, {len(sim.messages)} messages)")
@@ -143,6 +232,9 @@ async def run_mixed_persona_batch(
     storage = ConfigStorage()
     agent_loader = AgentLoader()
 
+    # Initialize rate limiter for Groq API
+    rate_limiter = RateLimiter(tokens_per_minute=250_000, safety_margin=0.85)
+
     # Seed prompt for Tegra to generate opening message
     # This prompt is sent to the workflow agent to generate system0
     # Design considerations:
@@ -161,7 +253,7 @@ What brought you to this work?"""
     # Create tasks for all simulations
     tasks = []
 
-    # Paul simulations (1-5)
+    # Paul simulations (1-10)
     for i in range(1, simulations_per_persona + 1):
         task = run_single_simulation(
             storage=storage,
@@ -173,11 +265,12 @@ What brought you to this work?"""
             max_turns=max_turns,
             batch_timestamp=batch_timestamp,
             output_folder=batch_folder,
-            initial_prompt=initial_prompt
+            initial_prompt=initial_prompt,
+            rate_limiter=rate_limiter
         )
         tasks.append(task)
 
-    # Ellen simulations (1-5)
+    # Ellen simulations (1-10)
     for i in range(1, simulations_per_persona + 1):
         task = run_single_simulation(
             storage=storage,
@@ -189,7 +282,8 @@ What brought you to this work?"""
             max_turns=max_turns,
             batch_timestamp=batch_timestamp,
             output_folder=batch_folder,
-            initial_prompt=initial_prompt
+            initial_prompt=initial_prompt,
+            rate_limiter=rate_limiter
         )
         tasks.append(task)
 
@@ -222,8 +316,11 @@ What brought you to this work?"""
     print(f"  Paul: {len(paul_results)}/{simulations_per_persona}")
     print(f"  Ellen: {len(ellen_results)}/{simulations_per_persona}")
     print(f"Duration: {duration:.1f} seconds ({duration/total_sims:.1f}s per simulation avg)")
+    if rate_limiter and rate_limiter.total_tokens_tracked > 0:
+        print(f"Tokens tracked: {rate_limiter.total_tokens_tracked:,} (estimate)")
     print("="*70)
     print(f"Output folder: {batch_folder}")
+    print(f"Formats: JSON (machine-readable) + Markdown (human-readable)")
 
     if paul_results:
         print(f"\nPaul simulations:")
@@ -272,10 +369,10 @@ async def main():
     for agent in agents:
         agent_name_lower = agent['name'].lower()
 
-        # Look for Intentions Workflow 7
-        if 'intentions' in agent_name_lower and 'workflow' in agent_name_lower and '7' in agent_name_lower:
+        # Look for Intentions Workflow 8
+        if 'intentions' in agent_name_lower and 'workflow' in agent_name_lower and '8' in agent_name_lower:
             workflow_agent_id = agent['id']
-            print(f"✓ Found Intentions Workflow 7: {agent['id']}")
+            print(f"✓ Found Intentions Workflow 8: {agent['id']}")
 
         # Look for Paul Persona 3
         if 'paul' in agent_name_lower and 'persona' in agent_name_lower and '3' in agent_name_lower:
@@ -289,7 +386,7 @@ async def main():
 
     # Check if all agents found
     if not workflow_agent_id:
-        print("\nERROR: Could not find 'Intentions Workflow 7'")
+        print("\nERROR: Could not find 'Intentions Workflow 8'")
         print("Available workflow agents:")
         for agent in agents:
             if 'workflow' in agent['name'].lower() or 'intentions' in agent['name'].lower():
@@ -311,7 +408,7 @@ async def main():
         ellen_agent_id=ellen_agent_id,
         simulations_per_persona=10,  # 10 Paul + 10 Ellen = 20 total
         max_turns=20,
-        max_concurrent=20  # Run all 20 at once for maximum speed
+        max_concurrent=10  # Run 10 at a time to avoid rate limits
     )
 
     print("✓ Mixed persona batch simulation complete!")
