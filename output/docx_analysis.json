@@ -1,0 +1,167 @@
+{
+  "stats": {
+    "total_paragraphs": 290,
+    "styles_used": {
+      "Title": 6,
+      "Heading 1": 72,
+      "normal": 212
+    },
+    "text_patterns": {
+      "week": [
+        1,
+        41
+      ],
+      "day": [
+        3,
+        43
+      ],
+      "day_title": [
+        5,
+        45
+      ],
+      "summary": [
+        12
+      ],
+      "daily_passage": [
+        14
+      ],
+      "alternative_view": [
+        23
+      ],
+      "activity": [
+        25
+      ],
+      "sources": [
+        30
+      ],
+      "domain": [
+        36
+      ],
+      "modality": [
+        38
+      ]
+    }
+  },
+  "day_structures": [
+    {
+      "day": "Day 1",
+      "sections": [
+        "week"
+      ]
+    },
+    {
+      "day": "Day Title",
+      "sections": [
+        "lesson name",
+        "meme",
+        "summary",
+        "daily passage",
+        "alternative view",
+        "activity",
+        "sources",
+        "domain",
+        "modality"
+      ]
+    },
+    {
+      "day": "Day 2",
+      "sections": [
+        "week"
+      ]
+    },
+    {
+      "day": "Day Title",
+      "sections": [
+        "lesson name",
+        "meme",
+        "summary",
+        "daily passage",
+        "alternative view",
+        "activity",
+        "sources",
+        "domain",
+        "modality"
+      ]
+    },
+    {
+      "day": "Day 3",
+      "sections": [
+        "week"
+      ]
+    },
+    {
+      "day": "Day Title",
+      "sections": [
+        "lesson name",
+        "meme",
+        "summary",
+        "daily passage",
+        "alternative view",
+        "activity",
+        "sources",
+        "domain",
+        "modality"
+      ]
+    },
+    {
+      "day": "Day 4",
+      "sections": [
+        "week"
+      ]
+    },
+    {
+      "day": "Day Title",
+      "sections": [
+        "lesson name",
+        "meme",
+        "summary",
+        "daily passage",
+        "alternative view",
+        "activity",
+        "sources",
+        "domain",
+        "modality"
+      ]
+    },
+    {
+      "day": "Day 5",
+      "sections": [
+        "week"
+      ]
+    },
+    {
+      "day": "Day Title",
+      "sections": [
+        "lesson name",
+        "meme",
+        "summary",
+        "daily passage",
+        "alternative view",
+        "activity",
+        "sources",
+        "domain",
+        "modality"
+      ]
+    },
+    {
+      "day": "Day 6",
+      "sections": [
+        "week"
+      ]
+    },
+    {
+      "day": "Day Title",
+      "sections": [
+        "lesson name",
+        "meme",
+        "summary",
+        "daily passage",
+        "alternative view",
+        "activity",
+        "sources",
+        "domain",
+        "modality"
+      ]
+    }
+  ]
+}

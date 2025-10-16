@@ -1,0 +1,141 @@
+interactions:
+- request:
+    body: '{"messages":[{"role":"system","content":"A simple test agent\n<instructions>\n-
+      You are Simple Agent, A simple test agent\n- \n- Core principles:\n- - Provide
+      helpful, accurate information\n- - Be concise and clear in responses\n- - Use
+      available tools when appropriate\n- - Maintain context across conversations\n-
+      \n- You are a simple test agent.\n- Always respond with exactly ''Hello World''
+      when asked to say hello.\n- Be extremely concise.\n- \n- Current user: test_user\n-
+      Current timestamp: 2025-08-17T15:33:43.114408\n</instructions>\n\n<additional_information>\n-
+      Use markdown to format your answers.\n</additional_information>"},{"role":"user","content":"Say
+      hello\n\n<context>\n{}\n</context>"}],"model":"llama-3.1-8b-instant","temperature":0.1,"tools":[]}'
+    headers:
+      accept:
+      - application/json
+      accept-encoding:
+      - gzip, deflate
+      connection:
+      - keep-alive
+      content-length:
+      - '766'
+      content-type:
+      - application/json
+      host:
+      - api.groq.com
+      user-agent:
+      - AsyncGroq/Python 0.31.0
+      x-stainless-arch:
+      - arm64
+      x-stainless-async:
+      - async:asyncio
+      x-stainless-lang:
+      - python
+      x-stainless-os:
+      - MacOS
+      x-stainless-package-version:
+      - 0.31.0
+      x-stainless-read-timeout:
+      - '60'
+      x-stainless-retry-count:
+      - '0'
+      x-stainless-runtime:
+      - CPython
+      x-stainless-runtime-version:
+      - 3.11.13
+    method: POST
+    uri: https://api.groq.com/openai/v1/chat/completions
+  response:
+    body:
+      string: !!binary |
+        H4sIAAAAAAAAA1xRzY7bIBC+9ylW0yuOjI0J5gn6BntYVRaGccIGGAdIN1WUd6+82qRVr5/m+50b
+        eAca7NFUG9fQcKnk0LdDw60cGmHHpZnbWTRSDbNCnEcue2BA8zva+kXcWYprwOopAQOb0VR0oPl+
+        GIQQqusZRHIYQEMIJpqm3/FGzY1PpZpUN86RvMUC+u0GPjm8gm4ZRCzFHBD0DTIFBA2mFP/kUKqY
+        tgzfX35gCPTySjk4uDMIdFgzzQV0uoTAYPHJl+OU0RRKoKFUWuH+k8HloX++4AWn6iOCbndty4Xq
+        OzEyWDPFtU6VTpgKaK7av9jjuuOy64QUW6bHEE/Gf+jTQSjOh75jUKma8I+BeEJPfSn6fhzl/Svw
+        NGc0J0cf6VGw/C4V47T4dMC8Zv85y7JOo+LLPIj9XgGD63TIdN7afr4843lq+an7MPFoLPZXhYtD
+        N5xll092m7Fg/uXtNgtm0EBpchhNcnD/9gcAAP//AwDvgofYNwIAAA==
+    headers:
+      CF-RAY:
+      - 970a3b41da54d9c6-MCI
+      Cache-Control:
+      - private, max-age=0, no-store, no-cache, must-revalidate
+      Connection:
+      - keep-alive
+      Content-Encoding:
+      - gzip
+      Content-Type:
+      - application/json
+      Date:
+      - Sun, 17 Aug 2025 15:33:43 GMT
+      Server:
+      - cloudflare
+      Set-Cookie:
+      - __cf_bm=OwVLyEbUfe74eh7YDW2c2m4hzP0Qxkt36kw7s2uPPsM-1755444823-1.0.1.1-t_9LjSz4jT4qr5R8vP4m6HR3I8oeBWG6sa0nHfEQmXlrZc4cauVdnKStenq6E.lUGNFJVWXklGebL5y0W6Qg.J8mvrLXBk3WjOKM_9ApwCg;
+        path=/; expires=Sun, 17-Aug-25 16:03:43 GMT; domain=.groq.com; HttpOnly; Secure;
+        SameSite=None
+      Transfer-Encoding:
+      - chunked
+      alt-svc:
+      - h3=":443"; ma=86400
+      cf-cache-status:
+      - DYNAMIC
+      vary:
+      - Origin
+      via:
+      - 1.1 google
+      x-groq-region:
+      - msp
+      x-ratelimit-limit-requests:
+      - '500000'
+      x-ratelimit-limit-tokens:
+      - '250000'
+      x-ratelimit-remaining-requests:
+      - '499999'
+      x-ratelimit-remaining-tokens:
+      - '249838'
+      x-ratelimit-reset-requests:
+      - 172.799999ms
+      x-ratelimit-reset-tokens:
+      - 38.88ms
+      x-request-id:
+      - req_01k2wamhace3x8efded5q62rkc
+    status:
+      code: 200
+      message: OK
+- request:
+    body: '{"run":{"session_id":"40a1892f-f54e-489c-b61c-abb42737c759","run_id":"07ea33e2-ade9-48e4-b8a8-369648fd95c1","run_data":{"functions":{},"metrics":{"input_tokens":[180],"output_tokens":[4],"total_tokens":[184],"audio_tokens":[0],"input_audio_tokens":[0],"output_audio_tokens":[0],"cached_tokens":[0],"cache_write_tokens":[0],"reasoning_tokens":[0],"prompt_tokens":[0],"completion_tokens":[0],"additional_metrics":[{"completion_time":0.004811532,"prompt_time":0.021622464,"queue_time":0.001483249,"total_time":0.026433996}],"time":[0.3012674170313403]}},"agent_data":{"model":{"provider":"Groq","id":"llama-3.1-8b-instant","name":"Groq","temperature":0.1},"created_at":1755444823,"updated_at":null}}}'
+    headers:
+      accept:
+      - '*/*'
+      accept-encoding:
+      - gzip, deflate
+      connection:
+      - keep-alive
+      content-length:
+      - '697'
+      content-type:
+      - application/json
+      host:
+      - api.agno.com
+      user-agent:
+      - agno/1.7.11
+    method: POST
+    uri: https://api.agno.com/v1/telemetry/agent/run/create
+  response:
+    body:
+      string: '{"status":"success","message":"AgentTelemetryRun creation acknowledged"}'
+    headers:
+      Connection:
+      - keep-alive
+      Content-Length:
+      - '72'
+      Content-Type:
+      - application/json
+      Date:
+      - Sun, 17 Aug 2025 15:33:43 GMT
+      server:
+      - uvicorn
+    status:
+      code: 200
+      message: OK
+version: 1

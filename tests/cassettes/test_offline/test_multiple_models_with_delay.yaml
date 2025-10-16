@@ -1,0 +1,278 @@
+interactions:
+- request:
+    body: '{"messages":[{"role":"system","content":"Testing different models\n<instructions>\n-
+      You are Agent (llama-3.1-8b-instant), Testing different models\n- \n- Core principles:\n-
+      - Provide helpful, accurate information\n- - Be concise and clear in responses\n-
+      - Use available tools when appropriate\n- - Maintain context across conversations\n-
+      \n- Respond with ''OK'' to any input.\n- \n- Current user: test_user\n- Current
+      timestamp: 2025-08-17T15:34:06.501827\n</instructions>\n\n<additional_information>\n-
+      Use markdown to format your answers.\n</additional_information>"},{"role":"user","content":"Test\n\n<context>\n{}\n</context>"}],"model":"llama-3.1-8b-instant","temperature":0.1,"tools":[]}'
+    headers:
+      accept:
+      - application/json
+      accept-encoding:
+      - gzip, deflate
+      connection:
+      - keep-alive
+      content-length:
+      - '695'
+      content-type:
+      - application/json
+      host:
+      - api.groq.com
+      user-agent:
+      - AsyncGroq/Python 0.31.0
+      x-stainless-arch:
+      - arm64
+      x-stainless-async:
+      - async:asyncio
+      x-stainless-lang:
+      - python
+      x-stainless-os:
+      - MacOS
+      x-stainless-package-version:
+      - 0.31.0
+      x-stainless-read-timeout:
+      - '60'
+      x-stainless-retry-count:
+      - '0'
+      x-stainless-runtime:
+      - CPython
+      x-stainless-runtime-version:
+      - 3.11.13
+    method: POST
+    uri: https://api.groq.com/openai/v1/chat/completions
+  response:
+    body:
+      string: !!binary |
+        H4sIAAAAAAAAA1SRzW7CMBCE732MPdvIJk7j+BV66ANUleU4G3DxT7BNASHevQoC2l5H+41mZi/g
+        RlBgt6baMHvaTWxquUUqDB+pEIi0H6ShyG03dLJBbFsgkIYvtPUOrmwKs8fqUgQCNqOpOILiXdsK
+        IaR4JRDSiB4UeG+Coc2KUzlQF0s1sS7MNjmLBdTHBVwc8QSKEQhYitkgqAvk5BEUmFLck0mxYlwy
+        vL/BlYBPmzmnoYCKB+8JTC66stUZTUkRFJSaZrh+Ejg8TPcHPKCuLiAotmKM9+tONpLAnFOYq65p
+        h7EsRdiv9rhuWSsb2TdLkEf7J7H+r94YvuJIOwI1VeP/eK+f0l9rwVhzvWfVQ0azG9MxPrqVc6kY
+        9OTiBvOc3W2Gada95NPQiq6TQOCkNzntl6K3F2fca8Z366OJksXp2PRbjobnU93x03lZsGD+dnZZ
+        BDMoSFGPGEwc4fryAwAA//8DAD02NDEnAgAA
+    headers:
+      CF-RAY:
+      - 970a3bd31dbb4df3-MCI
+      Cache-Control:
+      - private, max-age=0, no-store, no-cache, must-revalidate
+      Connection:
+      - keep-alive
+      Content-Encoding:
+      - gzip
+      Content-Type:
+      - application/json
+      Date:
+      - Sun, 17 Aug 2025 15:34:06 GMT
+      Server:
+      - cloudflare
+      Set-Cookie:
+      - __cf_bm=Auc9Af0bS8dNaWbPpSyoNI9E2.mXZh2kJ88Z8Fe_Kx4-1755444846-1.0.1.1-kDb0W9mfz7JUKrweKzpE.tRjHa3o40zJn0tiJuC3ihebn42vHvPa.1j9H3pv4gzTVpkmaoYswc.SSMNvTE3fTR05fgg5eTuD.isYdh7mFhg;
+        path=/; expires=Sun, 17-Aug-25 16:04:06 GMT; domain=.groq.com; HttpOnly; Secure;
+        SameSite=None
+      Transfer-Encoding:
+      - chunked
+      alt-svc:
+      - h3=":443"; ma=86400
+      cf-cache-status:
+      - DYNAMIC
+      vary:
+      - Origin
+      via:
+      - 1.1 google
+      x-groq-region:
+      - msp
+      x-ratelimit-limit-requests:
+      - '500000'
+      x-ratelimit-limit-tokens:
+      - '250000'
+      x-ratelimit-remaining-requests:
+      - '499999'
+      x-ratelimit-remaining-tokens:
+      - '249855'
+      x-ratelimit-reset-requests:
+      - 172.799999ms
+      x-ratelimit-reset-tokens:
+      - 34.8ms
+      x-request-id:
+      - req_01k2wan80nfw39h1ea1rxtk1xy
+    status:
+      code: 200
+      message: OK
+- request:
+    body: '{"run":{"session_id":"7fa9564b-6991-4913-8508-b766faeee612","run_id":"fe91da58-c236-443e-bf1c-d731765bb89c","run_data":{"functions":{},"metrics":{"input_tokens":[170],"output_tokens":[2],"total_tokens":[172],"audio_tokens":[0],"input_audio_tokens":[0],"output_audio_tokens":[0],"cached_tokens":[0],"cache_write_tokens":[0],"reasoning_tokens":[0],"prompt_tokens":[0],"completion_tokens":[0],"additional_metrics":[{"completion_time":1.1e-07,"prompt_time":0.050583893,"queue_time":0.001927838,"total_time":0.050584003}],"time":[0.16847529204096645]}},"agent_data":{"model":{"provider":"Groq","name":"Groq","id":"llama-3.1-8b-instant","temperature":0.1},"created_at":1755444846,"updated_at":null}}}'
+    headers:
+      accept:
+      - '*/*'
+      accept-encoding:
+      - gzip, deflate
+      connection:
+      - keep-alive
+      content-length:
+      - '694'
+      content-type:
+      - application/json
+      host:
+      - api.agno.com
+      user-agent:
+      - agno/1.7.11
+    method: POST
+    uri: https://api.agno.com/v1/telemetry/agent/run/create
+  response:
+    body:
+      string: '{"status":"success","message":"AgentTelemetryRun creation acknowledged"}'
+    headers:
+      Connection:
+      - keep-alive
+      Content-Length:
+      - '72'
+      Content-Type:
+      - application/json
+      Date:
+      - Sun, 17 Aug 2025 15:34:06 GMT
+      server:
+      - uvicorn
+    status:
+      code: 200
+      message: OK
+- request:
+    body: '{"messages":[{"role":"system","content":"Testing different models\n<instructions>\n-
+      You are Agent (openai/gpt-oss-20b), Testing different models\n- \n- Core principles:\n-
+      - Provide helpful, accurate information\n- - Be concise and clear in responses\n-
+      - Use available tools when appropriate\n- - Maintain context across conversations\n-
+      \n- Respond with ''OK'' to any input.\n- \n- Current user: test_user\n- Current
+      timestamp: 2025-08-17T15:34:08.936994\n</instructions>\n\n<additional_information>\n-
+      Use markdown to format your answers.\n</additional_information>"},{"role":"user","content":"Test\n\n<context>\n{}\n</context>"}],"model":"openai/gpt-oss-20b","temperature":0.1,"tools":[]}'
+    headers:
+      accept:
+      - application/json
+      accept-encoding:
+      - gzip, deflate
+      connection:
+      - keep-alive
+      content-length:
+      - '691'
+      content-type:
+      - application/json
+      host:
+      - api.groq.com
+      user-agent:
+      - AsyncGroq/Python 0.31.0
+      x-stainless-arch:
+      - arm64
+      x-stainless-async:
+      - async:asyncio
+      x-stainless-lang:
+      - python
+      x-stainless-os:
+      - MacOS
+      x-stainless-package-version:
+      - 0.31.0
+      x-stainless-read-timeout:
+      - '60'
+      x-stainless-retry-count:
+      - '0'
+      x-stainless-runtime:
+      - CPython
+      x-stainless-runtime-version:
+      - 3.11.13
+    method: POST
+    uri: https://api.groq.com/openai/v1/chat/completions
+  response:
+    body:
+      string: !!binary |
+        H4sIAAAAAAAAA1SSS2/bMBCE/wqxl1wkVw/qYd569sGHHnpoCoEiVzJriUuTlJ3U8H8vlEYJclsM
+        9sPODPYORoMAdZJRzW5KW9S8bAqVDnrYpzxTbdoORZ9ybOqeD/tC6QESoP4PqvgO7hTNbsJoyEIC
+        yqOMqEHkTVVxzlu+T2AmjRMIIIdWmm+jiymFkBZZvxInMgoDiF93MFbjC4gsgRlDkCOCuIOnCUGA
+        DMGEKG1cGbIR7ergeIAEPMpA1tgRBPxEZhE1i8Q8BkdWs5uJJ/Z0PDwxh55pvOJE62RsiH5Rq/Md
+        +z4FYktANkt/1nSzO/aDGC3RLZE9w/HwDDt4JDDR6Dz1AYRdpimBwVgTTt1/CyAgRHLw+J3Asvm/
+        LLhgF82MILJd1uR51lacJ+A8zS52kc5oA4giaz61bTsvqzKrqnrNvNX8QZTFV3mDirpu6zYvEogU
+        5fR5odx/SNsuz4q8Kev28e646z3KtwK2hOE1RJy7wdgRvfPmrffBdQMOssJWYg4JvHSjp8sa9+2j
+        PF66LD8XN2mlssiV5Nk1vgZ+bt3+79pjQH81au0F/foattM4S6v/SamWCwAAAP//AwBYxAf9lgIA
+        AA==
+    headers:
+      CF-RAY:
+      - 970a3be25b22d1a6-MCI
+      Cache-Control:
+      - private, max-age=0, no-store, no-cache, must-revalidate
+      Connection:
+      - keep-alive
+      Content-Encoding:
+      - gzip
+      Content-Type:
+      - application/json
+      Date:
+      - Sun, 17 Aug 2025 15:34:09 GMT
+      Server:
+      - cloudflare
+      Set-Cookie:
+      - __cf_bm=_Zmf4ZaZdNrhXN19hIUmvxV3FopJ14bri2YeXE3WQp4-1755444849-1.0.1.1-_VfYOpWRBSLdC0_Er7ZHBujGNpGQRcmxzNmlS3DLMZkX0H0lznMZfFwWMgHsa_yLgN92H25LwJ6Yhrlq2QBLdSFIoLLOOFs6P2UwBV4kijg;
+        path=/; expires=Sun, 17-Aug-25 16:04:09 GMT; domain=.groq.com; HttpOnly; Secure;
+        SameSite=None
+      Transfer-Encoding:
+      - chunked
+      alt-svc:
+      - h3=":443"; ma=86400
+      cf-cache-status:
+      - DYNAMIC
+      vary:
+      - Origin
+      via:
+      - 1.1 google
+      x-groq-region:
+      - msp
+      x-ratelimit-limit-requests:
+      - '500000'
+      x-ratelimit-limit-tokens:
+      - '250000'
+      x-ratelimit-remaining-requests:
+      - '499999'
+      x-ratelimit-remaining-tokens:
+      - '249792'
+      x-ratelimit-reset-requests:
+      - 172.799999ms
+      x-ratelimit-reset-tokens:
+      - 49.92ms
+      x-request-id:
+      - req_01k2wanacne4ca40vtys4k8p9z
+    status:
+      code: 200
+      message: OK
+- request:
+    body: '{"run":{"session_id":"d5380ad5-b189-43d7-884c-39924c76c5ef","run_id":"5eadcece-8ff1-4b83-a1d3-6f88a933e00a","run_data":{"functions":{},"metrics":{"input_tokens":[207],"output_tokens":[32],"total_tokens":[239],"audio_tokens":[0],"input_audio_tokens":[0],"output_audio_tokens":[0],"cached_tokens":[0],"cache_write_tokens":[0],"reasoning_tokens":[0],"prompt_tokens":[0],"completion_tokens":[0],"additional_metrics":[{"completion_time":0.026686812,"prompt_time":0.013530556,"queue_time":0.071108544,"total_time":0.040217368}],"time":[0.23085854097735137]}},"agent_data":{"model":{"provider":"Groq","name":"Groq","id":"openai/gpt-oss-20b","temperature":0.1},"created_at":1755444849,"updated_at":null}}}'
+    headers:
+      accept:
+      - '*/*'
+      accept-encoding:
+      - gzip, deflate
+      connection:
+      - keep-alive
+      content-length:
+      - '697'
+      content-type:
+      - application/json
+      host:
+      - api.agno.com
+      user-agent:
+      - agno/1.7.11
+    method: POST
+    uri: https://api.agno.com/v1/telemetry/agent/run/create
+  response:
+    body:
+      string: '{"status":"success","message":"AgentTelemetryRun creation acknowledged"}'
+    headers:
+      Connection:
+      - keep-alive
+      Content-Length:
+      - '72'
+      Content-Type:
+      - application/json
+      Date:
+      - Sun, 17 Aug 2025 15:34:09 GMT
+      server:
+      - uvicorn
+    status:
+      code: 200
+      message: OK
+version: 1

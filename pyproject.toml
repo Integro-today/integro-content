@@ -1,0 +1,146 @@
+[project]
+name = "integro"
+version = "0.1.0"
+description = "A generic, configurable AI agent framework with runtime tool configuration and Qdrant memory"
+readme = "README.md"
+requires-python = ">=3.10"
+authors = [
+    { name = "Integro Team" }
+]
+dependencies = [
+    # Core Dependencies
+    "agno",
+    "pydantic",
+    "python-dotenv",
+    "pyyaml",
+    "click",
+    "nanoid",
+
+    # AI/LLM Providers
+    "openai",
+    "groq",
+
+    # Database & Storage
+    "sqlalchemy",
+    "psycopg2-binary",
+    "asyncpg",
+    "aiosqlite",
+    "qdrant-client",
+    "fastembed",
+
+    # Web Framework & API
+    "fastapi",
+    "uvicorn[standard]",
+    "websockets",
+    "aiohttp",
+    "anyio",
+    "httpx",
+
+    # Redis for distributed state/cache
+    "redis",
+    "hiredis",
+
+    # Security & Authentication
+    "python-jose[cryptography]",
+    "passlib[bcrypt]",
+    "python-multipart",
+
+    # Document Processing
+    "pypdf",
+    "python-docx",
+    "openpyxl",
+    "ebooklib",
+    "python-pptx",
+    "markdownify",
+    "beautifulsoup4",
+    "chardet",
+    "unstructured",
+    "langchain-text-splitters",
+
+    # UI & Display
+    "textual",
+    "rich",
+
+    # ML/NLP for intent detection
+    "sentence-transformers",
+    "torch",
+    "numpy",
+
+    # Monitoring & Observability
+    "prometheus-client",
+    "sentry-sdk",
+    "structlog",
+
+    # Rate Limiting
+    "slowapi",
+
+    # Background Tasks
+    "celery",
+
+    # Input Sanitization
+    "bleach",
+
+    # Utilities
+    "tenacity",
+    "aiofiles",
+]
+
+[project.optional-dependencies]
+dev = [
+    # Development & Testing
+    "pytest",
+    "pytest-asyncio",
+    "pytest-recording",
+    "pytest-cov",
+    "vcrpy",
+    "faker",
+
+    # Code Quality
+    "black",
+    "ruff",
+    "mypy",
+    "isort",
+
+    # Development Tools
+    "ipython",
+    "watchdog",
+
+    # API Testing
+    "httpie",
+    "locust",
+
+    # Pre-commit hooks
+    "pre-commit",
+]
+voice = [
+    # LiveKit Voice Agent Support
+    "livekit>=0.1.0",
+    "livekit-agents>=0.6.0",
+    "livekit-plugins-assemblyai>=0.1.0",
+    "livekit-plugins-cartesia>=0.1.0",
+]
+
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+packages = ["integro"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py38"
+
+[tool.black]
+line-length = 100
+target-version = ['py38']
+
+[tool.pytest.ini_options]
+testpaths = ["."]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+asyncio_mode = "auto"
+addopts = "-v --tb=short"
+log_cli = true
+log_cli_level = "INFO"

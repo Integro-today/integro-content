@@ -1,0 +1,69 @@
+{
+  "expedition": {
+    "number": 1,
+    "title": "Healing the Self"
+  },
+  "week": 1,
+  "theme": "Roots of Healing",
+  "days": [
+    {
+      "day_number": 1,
+      "day_title": "What Does Healing Mean?",
+      "meme": {
+        "placeholder": true,
+        "alt_text": "Insert meme image"
+      },
+      "summary": "Healing is not about fixing what is broken. It's about moving toward wholeness. It means embracing all parts of ourselves, integrating our wounds, and finding balance rather than striving for perfection. Healing is an unfolding process that deepens self-compassion and connection.",
+      "daily_passage": "When most people think about healing, they imagine a process of repairing what is broken or correcting what has gone wrong. This perspective comes naturally in a culture shaped by medical models of illness and treatment: symptoms appear, a diagnosis is given, and the aim is to fix the problem until it disappears. Yet when we approach healing only as fixing, we may miss its deeper essence.\n\nHealing is not the same as curing. Curing is the elimination of disease or the removal of symptoms. Healing, by contrast, is a movement toward wholeness. It is about integrating all parts of the self, even those that feel messy, wounded, or incomplete. The word \"heal\" comes from the Old English hælan, meaning \"to make whole.\" This shift in perspective is vital for self-healing: we are not trying to become perfect or symptom-free, but rather to become more complete, authentic, and aligned.\n\nThis understanding is echoed in many traditions. In Indigenous wisdom, healing is often seen as restoring balance within the individual, the community, and the natural world. In Jungian psychology, healing arises from integrating the conscious and unconscious aspects of the psyche, creating greater harmony. In Internal Family Systems healing means transforming our inner system by bringing the core Self to lead the internal family of parts. From a spiritual lens, healing is less about removing pain and more about finding meaning, connection, and peace within it.\n\nFrom a psychological perspective, Gabor Maté has written extensively on how trauma expresses itself in the body and mind. He suggests that healing is not erasing the wounds of trauma, but learning to live in right relationship with them, acknowledging the pain while cultivating compassion for the self who endured it. In this sense, healing is an unfolding, not a quick repair.\n\nThe danger of the \"fixing\" mindset is that it positions us as defective. If we see ourselves as broken machines, then healing becomes a technical project of replacing parts or correcting errors. This fosters shame and impatience: \"Why am I not healed yet?\" But if healing is wholeness, then every step, even the struggles, is part of the process. Instead of striving for a flawless self, we learn to embrace a fuller self.\n\nIn psychedelic integration, this distinction is particularly important. Journeys can reveal profound insights, but if we approach them with the mindset of fixing, \"I need this ceremony to erase my depression,\" \"I need this medicine to cure my anxiety\", we may miss their true gift. Psychedelics often illuminate what needs to be felt, expressed, or re-integrated. Healing is the gentle work of weaving those insights into daily life, not erasing what makes us human.\n\nHealing also unfolds at multiple levels. There is personal healing, where we attend to our own wounds and patterns. There is relational healing, where we learn to repair connections with others. And there is collective healing, recognizing that personal suffering often reflects broader societal and cultural imbalances. True healing acknowledges this interconnectedness, seeing the self not as isolated but as part of a larger web.\n\nUltimately, healing is less about becoming someone new and more about remembering who we already are. Beneath the layers of pain and protection, there is a wholeness that has never been lost. Healing invites us to uncover it, to live more fully from it, and to trust that nothing within us is beyond redemption.",
+      "alternative_view": "Some argue that healing must be practical and outcome-driven, especially when dealing with severe illness or trauma. In these cases, symptom reduction and functional improvement can feel more pressing than abstract notions of wholeness. Both perspectives can coexist: while immediate relief and treatment are important, deeper healing can continue alongside them.",
+      "activity": {
+        "questions": [
+          "When I think of the word \"healing,\" what images or assumptions come to mind?",
+          "How has my life taught me to see healing as fixing? Where has that perspective been helpful, and where has it limited me?",
+          "What does wholeness mean to me right now?",
+          "Can I recall a moment when I felt more whole, even if my challenges had not disappeared?"
+        ]
+      },
+      "tools": [],
+      "sources": [
+        {
+          "author": "Maté, G.",
+          "year": 2003,
+          "title": "When the Body Says No: Exploring the Stress-Disease Connection",
+          "publisher": "Wiley",
+          "citation": "Maté, G. (2003). When the Body Says No: Exploring the Stress-Disease Connection. Wiley."
+        },
+        {
+          "author": "Jung, C. G.",
+          "year": 1963,
+          "title": "Memories, Dreams, Reflections",
+          "publisher": "Vintage",
+          "citation": "Jung, C. G. (1963). Memories, Dreams, Reflections. Vintage."
+        },
+        {
+          "author": "Ross, R.",
+          "year": 2014,
+          "title": "Indigenous Healing: Exploring Traditional Paths",
+          "publisher": "Penguin",
+          "citation": "Ross, R. (2014). Indigenous Healing: Exploring Traditional Paths. Penguin."
+        },
+        {
+          "author": "Siegel, D. J.",
+          "year": 2012,
+          "title": "Pocket Guide to Interpersonal Neurobiology",
+          "publisher": "W. W. Norton & Company",
+          "citation": "Siegel, D. J. (2012). Pocket Guide to Interpersonal Neurobiology. W. W. Norton & Company."
+        }
+      ],
+      "domain": "Psychotherapeutic",
+      "modality": "Psychological and Therapeutic"
+    }
+  ],
+  "metadata": {
+    "source_file": "Week 1_ Roots of Healing.pdf",
+    "last_updated": "2025-10-13T11:26:00Z",
+    "version": "1.0",
+    "extraction_method": "manual",
+    "sample": true
+  }
+}

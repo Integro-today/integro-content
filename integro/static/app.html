@@ -1,0 +1,2567 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Integro Labs</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <!-- Remove react-router-dom, we'll implement simple routing ourselves -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .fade-in {
+            animation: fadeIn 0.3s ease-in;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .slide-in {
+            animation: slideIn 0.3s ease-out;
+        }
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        .modal-backdrop {
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(4px);
+        }
+        /* Improved markdown content styles */
+        .markdown-content {
+            line-height: 1.6;
+            word-wrap: break-word;
+        }
+        .markdown-content h1, .markdown-content h2, .markdown-content h3,
+        .markdown-content h4, .markdown-content h5, .markdown-content h6 {
+            margin-top: 1rem;
+            margin-bottom: 0.5rem;
+            font-weight: bold;
+            line-height: 1.25;
+        }
+        .markdown-content h1 { font-size: 1.5rem; }
+        .markdown-content h2 { font-size: 1.25rem; }
+        .markdown-content h3 { font-size: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; }
+        .markdown-content h5 { font-size: 0.875rem; }
+        .markdown-content h6 { font-size: 0.85rem; }
+        .markdown-content p { 
+            margin-bottom: 0.75rem;
+            font-weight: normal !important;
+        }
+        .markdown-content ul, .markdown-content ol {
+            margin-left: 1.5rem;
+            margin-bottom: 0.75rem;
+        }
+        .markdown-content li {
+            margin-bottom: 0.25rem;
+        }
+        .markdown-content strong {
+            font-weight: 600;
+        }
+        .markdown-content em {
+            font-style: italic;
+        }
+        .markdown-content code {
+            background: #f3f4f6;
+            padding: 0.125rem 0.25rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+            font-family: 'Courier New', monospace;
+        }
+        .markdown-content pre {
+            background: #1f2937;
+            color: #f3f4f6;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            overflow-x: auto;
+            margin: 0.75rem 0;
+        }
+        .markdown-content pre code {
+            background: transparent;
+            padding: 0;
+            font-size: 0.875rem;
+        }
+        .markdown-content blockquote {
+            border-left: 4px solid #e5e7eb;
+            padding-left: 1rem;
+            margin: 0.75rem 0;
+            color: #6b7280;
+        }
+        .markdown-content hr {
+            border: 0;
+            height: 1px;
+            background: #e5e7eb;
+            margin: 1rem 0;
+        }
+        .markdown-content a {
+            color: #3b82f6;
+            text-decoration: underline;
+        }
+        .markdown-content a:hover {
+            color: #2563eb;
+        }
+        .markdown-content img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 0.5rem;
+            margin: 1rem 0;
+            display: block;
+        }
+        .markdown-content table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 0.75rem 0;
+        }
+        .markdown-content th, .markdown-content td {
+            border: 1px solid #e5e7eb;
+            padding: 0.5rem;
+            text-align: left;
+        }
+        .markdown-content th {
+            background: #f9fafb;
+            font-weight: 600;
+        }
+        .typing-indicator {
+            display: inline-flex;
+            align-items: center;
+            padding: 8px 12px;
+            background: #f3f4f6;
+            border-radius: 18px;
+        }
+        .typing-indicator span {
+            height: 8px;
+            width: 8px;
+            background: #9ca3af;
+            border-radius: 50%;
+            display: inline-block;
+            margin: 0 2px;
+            animation: typing 1.4s infinite;
+        }
+        .typing-indicator span:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+        .typing-indicator span:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+        @keyframes typing {
+            0%, 60%, 100% {
+                transform: translateY(0);
+            }
+            30% {
+                transform: translateY(-10px);
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <div id="root"></div>
+    
+    <script type="text/babel">
+        const { useState, useEffect, useRef, useCallback } = React;
+        
+        // Configure marked.js to prevent header misinterpretation
+        marked.setOptions({
+            headerIds: false,
+            mangle: false
+        });
+        
+        // Simple, robust markdown parser
+        function parseMarkdown(content) {
+            // Ensure content is a string
+            if (typeof content !== 'string') {
+                console.warn('parseMarkdown received non-string content:', typeof content, content);
+                content = String(content || '');
+            }
+            
+            // Return empty string for falsy values
+            if (!content) {
+                return '';
+            }
+            
+            try {
+                // Use marked.parse directly with safe defaults
+                // The library handles edge cases better than our custom overrides
+                const parsed = marked.parse(content, {
+                    breaks: true,  // Convert \n to <br>
+                    gfm: true,     // GitHub Flavored Markdown
+                    headerIds: false,
+                    mangle: false
+                });
+                
+                return parsed;
+            } catch (error) {
+                console.error('Markdown parsing error:', error);
+                console.error('Content that caused error:', content);
+                // Return safely escaped plain text as fallback
+                const escaped = content
+                    .replace(/&/g, '&amp;')
+                    .replace(/</g, '&lt;')
+                    .replace(/>/g, '&gt;')
+                    .replace(/"/g, '&quot;')
+                    .replace(/'/g, '&#039;')
+                    .replace(/\n/g, '<br>');
+                return `<p>${escaped}</p>`;
+            }
+        }
+        
+        // Navigation Component
+        function Navigation({ currentPage, onPageChange }) {
+            return (
+                <nav className="bg-white shadow-sm border-b border-gray-200">
+                    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                        <div className="flex justify-between h-16">
+                            <div className="flex">
+                                <div className="flex-shrink-0 flex items-center">
+                                    <h1 className="text-xl font-bold text-blue-600">
+                                        <i className="fas fa-flask mr-2"></i>
+                                        Integro Labs
+                                    </h1>
+                                </div>
+                                <div className="hidden sm:ml-6 sm:flex sm:space-x-8">
+                                    <button
+                                        onClick={() => onPageChange('chat')}
+                                        className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium ${
+                                            currentPage === 'chat' 
+                                                ? 'border-blue-500 text-gray-900' 
+                                                : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
+                                        }`}
+                                    >
+                                        <i className="fas fa-comments mr-2"></i>
+                                        Chat
+                                    </button>
+                                    <button
+                                        onClick={() => onPageChange('agents')}
+                                        className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium ${
+                                            currentPage === 'agents' 
+                                                ? 'border-blue-500 text-gray-900' 
+                                                : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
+                                        }`}
+                                    >
+                                        <i className="fas fa-users-cog mr-2"></i>
+                                        Agents
+                                    </button>
+                                    <button
+                                        onClick={() => onPageChange('knowledge')}
+                                        className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium ${
+                                            currentPage === 'knowledge' 
+                                                ? 'border-blue-500 text-gray-900' 
+                                                : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
+                                        }`}
+                                    >
+                                        <i className="fas fa-brain mr-2"></i>
+                                        Knowledge Bases
+                                    </button>
+                                    <button
+                                        onClick={() => onPageChange('compare')}
+                                        className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium ${
+                                            currentPage === 'compare' 
+                                                ? 'border-blue-500 text-gray-900' 
+                                                : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
+                                        }`}
+                                    >
+                                        <i className="fas fa-balance-scale mr-2"></i>
+                                        Compare
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </nav>
+            );
+        }
+        
+        // Agent Management Component
+        function AgentManagement() {
+            const [agents, setAgents] = useState([]);
+            const [showCreateModal, setShowCreateModal] = useState(false);
+            const [showEditModal, setShowEditModal] = useState(false);
+            const [selectedAgent, setSelectedAgent] = useState(null);
+            const [loading, setLoading] = useState(false);
+            
+            useEffect(() => {
+                fetchAgents();
+            }, []);
+            
+            const fetchAgents = async () => {
+                try {
+                    const response = await fetch('/api/agents');
+                    const data = await response.json();
+                    setAgents(data);
+                } catch (error) {
+                    console.error('Error fetching agents:', error);
+                }
+            };
+            
+            const handleCreateAgent = async (agentData) => {
+                setLoading(true);
+                try {
+                    const response = await fetch('/api/agents', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(agentData)
+                    });
+                    
+                    if (response.ok) {
+                        await fetchAgents();
+                        setShowCreateModal(false);
+                        alert('Agent created successfully!');
+                    } else {
+                        const error = await response.json();
+                        alert(`Error: ${error.detail}`);
+                    }
+                } catch (error) {
+                    alert(`Error creating agent: ${error.message}`);
+                } finally {
+                    setLoading(false);
+                }
+            };
+            
+            const handleUpdateAgent = async (agentId, agentData) => {
+                setLoading(true);
+                try {
+                    const response = await fetch(`/api/agents/${agentId}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(agentData)
+                    });
+                    
+                    if (response.ok) {
+                        await fetchAgents();
+                        setShowEditModal(false);
+                        alert('Agent updated successfully!');
+                    } else {
+                        const error = await response.json();
+                        alert(`Error: ${error.detail}`);
+                    }
+                } catch (error) {
+                    alert(`Error updating agent: ${error.message}`);
+                } finally {
+                    setLoading(false);
+                }
+            };
+            
+            const handleDeleteAgent = async (agentId) => {
+                if (!confirm('Are you sure you want to delete this agent?')) return;
+                
+                try {
+                    const response = await fetch(`/api/agents/${agentId}`, {
+                        method: 'DELETE'
+                    });
+                    
+                    if (response.ok) {
+                        await fetchAgents();
+                        alert('Agent deleted successfully!');
+                    } else {
+                        const error = await response.json();
+                        alert(`Error: ${error.detail}`);
+                    }
+                } catch (error) {
+                    alert(`Error deleting agent: ${error.message}`);
+                }
+            };
+            
+            const openEditModal = async (agent) => {
+                try {
+                    const response = await fetch(`/api/agents/${agent.id}`);
+                    const fullConfig = await response.json();
+                    setSelectedAgent(fullConfig);
+                    setShowEditModal(true);
+                } catch (error) {
+                    alert(`Error loading agent: ${error.message}`);
+                }
+            };
+            
+            return (
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                    <div className="flex justify-between items-center mb-6">
+                        <h2 className="text-2xl font-bold text-gray-900">Agent Management</h2>
+                        <button
+                            onClick={() => setShowCreateModal(true)}
+                            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+                        >
+                            <i className="fas fa-plus mr-2"></i>
+                            Create Agent
+                        </button>
+                    </div>
+                    
+                    <div className="bg-white shadow overflow-hidden sm:rounded-md">
+                        <ul className="divide-y divide-gray-200">
+                            {agents.map(agent => (
+                                <li key={agent.id} className="hover:bg-gray-50 transition-colors">
+                                    <div className="px-4 py-4 sm:px-6">
+                                        <div className="flex items-center justify-between">
+                                            <div className="flex-1">
+                                                <h3 className="text-lg font-medium text-gray-900">
+                                                    {agent.name}
+                                                </h3>
+                                                <p className="mt-1 text-sm text-gray-500">
+                                                    {agent.description}
+                                                </p>
+                                                <div className="mt-2 flex items-center text-sm text-gray-500">
+                                                    <i className="fas fa-user mr-1"></i>
+                                                    User: {agent.user_id || 'default'}
+                                                    {agent.knowledge_base_id && (
+                                                        <>
+                                                            <span className="mx-2">•</span>
+                                                            <i className="fas fa-brain mr-1"></i>
+                                                            Has Knowledge Base
+                                                        </>
+                                                    )}
+                                                </div>
+                                            </div>
+                                            <div className="flex space-x-2">
+                                                <button
+                                                    onClick={() => openEditModal(agent)}
+                                                    className="bg-gray-100 text-gray-700 px-3 py-1 rounded hover:bg-gray-200 transition-colors"
+                                                >
+                                                    <i className="fas fa-edit"></i>
+                                                </button>
+                                                <button
+                                                    onClick={() => handleDeleteAgent(agent.id)}
+                                                    className="bg-red-100 text-red-700 px-3 py-1 rounded hover:bg-red-200 transition-colors"
+                                                >
+                                                    <i className="fas fa-trash"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </li>
+                            ))}
+                        </ul>
+                        
+                        {agents.length === 0 && (
+                            <div className="text-center py-12">
+                                <i className="fas fa-users-cog text-6xl text-gray-300 mb-4"></i>
+                                <p className="text-gray-500">No agents yet. Create your first agent!</p>
+                            </div>
+                        )}
+                    </div>
+                    
+                    {/* Create Agent Modal */}
+                    {showCreateModal && (
+                        <AgentModal
+                            title="Create New Agent"
+                            agent={null}
+                            onSave={handleCreateAgent}
+                            onClose={() => setShowCreateModal(false)}
+                            loading={loading}
+                        />
+                    )}
+                    
+                    {/* Edit Agent Modal */}
+                    {showEditModal && selectedAgent && (
+                        <AgentModal
+                            title="Edit Agent"
+                            agent={selectedAgent}
+                            onSave={(data) => handleUpdateAgent(selectedAgent.id || selectedAgent.name.toLowerCase().replace(/ /g, '_'), data)}
+                            onClose={() => setShowEditModal(false)}
+                            loading={loading}
+                        />
+                    )}
+                </div>
+            );
+        }
+        
+        // Agent Modal Component
+        function AgentModal({ title, agent, onSave, onClose, loading }) {
+            // Migrate v1 parameters to v2 when loading an agent for editing
+            const migrateAgentParams = (agent) => {
+                if (!agent) return agent;
+                const migrated = { ...agent };
+                
+                // Migrate deprecated v1 parameters to v2
+                if ('add_history_to_messages' in agent && !('add_history_to_context' in agent)) {
+                    migrated.add_history_to_context = agent.add_history_to_messages;
+                }
+                if ('context' in agent && !('dependencies' in agent)) {
+                    migrated.dependencies = agent.context;
+                }
+                if ('response_model' in agent && !('output_schema' in agent)) {
+                    migrated.output_schema = agent.response_model;
+                }
+                
+                // Remove deprecated parameters
+                delete migrated.show_tool_calls;  // Always enabled in v2
+                delete migrated.add_history_to_messages;  // Replaced by add_history_to_context
+                delete migrated.add_state_in_messages;  // Deprecated
+                delete migrated.context;  // Replaced by dependencies
+                delete migrated.response_model;  // Replaced by output_schema
+                
+                return migrated;
+            };
+            
+            const migratedAgent = migrateAgentParams(agent);
+            
+            const [formData, setFormData] = useState({
+                name: migratedAgent?.name || '',
+                description: migratedAgent?.description || '',
+                user_id: migratedAgent?.user_id || 'default',
+                instructions: migratedAgent?.instructions?.join('\n') || '',
+                models: migratedAgent?.models || [
+                    {
+                        provider: 'groq',
+                        model_id: 'moonshotai/kimi-k2-instruct',
+                        params: { temperature: 0.7 }
+                    }
+                ],
+                knowledge_base_id: migratedAgent?.knowledge_base_id || null,
+                stream: migratedAgent?.stream || false,
+                markdown: migratedAgent?.markdown !== false,
+                enable_memory: migratedAgent?.enable_memory !== false,
+                enable_storage: migratedAgent?.enable_storage !== false,
+                tool_call_limit: migratedAgent?.tool_call_limit || 20,
+                search_knowledge: migratedAgent?.search_knowledge !== false,
+                add_references: migratedAgent?.add_references || false,
+                add_history_to_context: migratedAgent?.add_history_to_context !== false,  // v2 parameter
+                add_datetime_to_context: migratedAgent?.add_datetime_to_context || false,  // v2 parameter
+                num_history_runs: migratedAgent?.num_history_runs || 5,
+                reasoning: migratedAgent?.reasoning || false,
+                enable_user_memories: migratedAgent?.enable_user_memories || false,  // v2 parameter
+                temperature: migratedAgent?.temperature || 0.7
+            });
+            
+            const [knowledgeBases, setKnowledgeBases] = useState([]);
+            const [showAdvanced, setShowAdvanced] = useState(false);
+            
+            useEffect(() => {
+                // Fetch available knowledge bases
+                fetch('/api/knowledge-bases')
+                    .then(res => res.json())
+                    .then(data => setKnowledgeBases(data))
+                    .catch(err => console.error('Error fetching KBs:', err));
+            }, []);
+            
+            const availableModels = [
+                // Groq Production Models
+                { provider: 'groq', model_id: 'llama-3.3-70b-versatile', name: 'Llama 3.3 70B Versatile (Groq)' },
+                { provider: 'groq', model_id: 'llama-3.1-8b-instant', name: 'Llama 3.1 8B Instant (Groq)' },
+                { provider: 'groq', model_id: 'meta-llama/llama-guard-4-12b', name: 'Llama Guard 4 12B (Groq)' },
+                
+                // Groq Preview Models
+                { provider: 'groq', model_id: 'moonshotai/kimi-k2-instruct', name: 'Kimi K2 Instruct (Groq Preview)' },
+                { provider: 'groq', model_id: 'deepseek-r1-distill-llama-70b', name: 'DeepSeek R1 Distill 70B (Groq Preview)' },
+                { provider: 'groq', model_id: 'meta-llama/llama-4-maverick-17b-128e-instruct', name: 'Llama 4 Maverick 17B (Groq Preview)' },
+                { provider: 'groq', model_id: 'meta-llama/llama-4-scout-17b-16e-instruct', name: 'Llama 4 Scout 17B (Groq Preview)' },
+                { provider: 'groq', model_id: 'openai/gpt-oss-120b', name: 'GPT OSS 120B (Groq Preview)' },
+                { provider: 'groq', model_id: 'openai/gpt-oss-20b', name: 'GPT OSS 20B (Groq Preview)' },
+                { provider: 'groq', model_id: 'qwen/qwen3-32b', name: 'Qwen 3 32B (Groq Preview)' },
+                
+                // Anthropic Models
+                { provider: 'anthropic', model_id: 'claude-3-5-sonnet-20241022', name: 'Claude 3.5 Sonnet' },
+                { provider: 'anthropic', model_id: 'claude-3-5-haiku-20241022', name: 'Claude 3.5 Haiku' },
+                { provider: 'anthropic', model_id: 'claude-3-opus-20240229', name: 'Claude 3 Opus' },
+                { provider: 'anthropic', model_id: 'claude-3-sonnet-20240229', name: 'Claude 3 Sonnet' },
+                { provider: 'anthropic', model_id: 'claude-3-haiku-20240307', name: 'Claude 3 Haiku' },
+                
+                // OpenAI Models
+                { provider: 'openai', model_id: 'gpt-4o', name: 'GPT-4o' },
+                { provider: 'openai', model_id: 'gpt-4o-mini', name: 'GPT-4o Mini' },
+                { provider: 'openai', model_id: 'gpt-4-turbo', name: 'GPT-4 Turbo' },
+                { provider: 'openai', model_id: 'gpt-4', name: 'GPT-4' },
+                { provider: 'openai', model_id: 'gpt-3.5-turbo', name: 'GPT-3.5 Turbo' }
+            ];
+            
+            const handleAddModel = () => {
+                setFormData({
+                    ...formData,
+                    models: [...formData.models, {
+                        provider: 'groq',
+                        model_id: 'moonshotai/kimi-k2-instruct',
+                        params: { temperature: 0.7 }
+                    }]
+                });
+            };
+            
+            const handleRemoveModel = (index) => {
+                setFormData({
+                    ...formData,
+                    models: formData.models.filter((_, i) => i !== index)
+                });
+            };
+            
+            const handleModelChange = (index, field, value) => {
+                const newModels = [...formData.models];
+                if (field === 'model') {
+                    const [provider, model_id] = value.split('::');
+                    newModels[index] = {
+                        ...newModels[index],
+                        provider,
+                        model_id
+                    };
+                } else if (field === 'temperature') {
+                    newModels[index] = {
+                        ...newModels[index],
+                        params: { ...newModels[index].params, temperature: parseFloat(value) }
+                    };
+                }
+                setFormData({ ...formData, models: newModels });
+            };
+            
+            const handleSubmit = (e) => {
+                e.preventDefault();
+                const data = {
+                    ...formData,
+                    instructions: formData.instructions.split('\n').filter(i => i.trim()),
+                    knowledge_base_id: formData.knowledge_base_id === 'none' ? null : formData.knowledge_base_id
+                };
+                onSave(data);
+            };
+            
+            return (
+                <div className="fixed inset-0 modal-backdrop flex items-center justify-center z-50 p-4">
+                    <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto slide-in">
+                        <div className="px-6 py-4 border-b border-gray-200 sticky top-0 bg-white z-10">
+                            <h3 className="text-lg font-medium text-gray-900">{title}</h3>
+                        </div>
+                        
+                        <form onSubmit={handleSubmit} className="p-6 space-y-6">
+                            {/* Basic Information */}
+                            <div className="space-y-4">
+                                <h4 className="font-medium text-gray-900">Basic Information</h4>
+                                
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700">Name *</label>
+                                        <input
+                                            type="text"
+                                            value={formData.name}
+                                            onChange={(e) => setFormData({...formData, name: e.target.value})}
+                                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm px-3 py-2 border"
+                                            required
+                                        />
+                                    </div>
+                                    
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700">User ID</label>
+                                        <input
+                                            type="text"
+                                            value={formData.user_id}
+                                            onChange={(e) => setFormData({...formData, user_id: e.target.value})}
+                                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm px-3 py-2 border"
+                                        />
+                                    </div>
+                                </div>
+                                
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700">Description</label>
+                                    <input
+                                        type="text"
+                                        value={formData.description}
+                                        onChange={(e) => setFormData({...formData, description: e.target.value})}
+                                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm px-3 py-2 border"
+                                        placeholder="AI assistant for..."
+                                    />
+                                </div>
+                                
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700">Instructions (one per line)</label>
+                                    <textarea
+                                        value={formData.instructions}
+                                        onChange={(e) => setFormData({...formData, instructions: e.target.value})}
+                                        rows="4"
+                                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm px-3 py-2 border"
+                                        placeholder="You are a helpful assistant&#10;Always be polite and professional&#10;Provide detailed explanations"
+                                    />
+                                </div>
+                            </div>
+                            
+                            {/* Model Configuration */}
+                            <div className="space-y-4">
+                                <div className="flex items-center justify-between">
+                                    <h4 className="font-medium text-gray-900">Model Configuration (Fallback Chain)</h4>
+                                    <button
+                                        type="button"
+                                        onClick={handleAddModel}
+                                        className="text-sm bg-blue-100 text-blue-700 px-3 py-1 rounded hover:bg-blue-200"
+                                    >
+                                        <i className="fas fa-plus mr-1"></i>
+                                        Add Model
+                                    </button>
+                                </div>
+                                
+                                {formData.models.map((model, index) => (
+                                    <div key={index} className="border border-gray-200 rounded-lg p-4">
+                                        <div className="flex items-center justify-between mb-3">
+                                            <span className="text-sm font-medium text-gray-700">
+                                                Model {index + 1} {index === 0 && '(Primary)'}
+                                            </span>
+                                            {formData.models.length > 1 && (
+                                                <button
+                                                    type="button"
+                                                    onClick={() => handleRemoveModel(index)}
+                                                    className="text-red-600 hover:text-red-800"
+                                                >
+                                                    <i className="fas fa-trash"></i>
+                                                </button>
+                                            )}
+                                        </div>
+                                        
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                            <div>
+                                                <label className="block text-xs font-medium text-gray-600">Model</label>
+                                                <select
+                                                    value={`${model.provider}::${model.model_id}`}
+                                                    onChange={(e) => handleModelChange(index, 'model', e.target.value)}
+                                                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm px-3 py-2 border"
+                                                >
+                                                    {availableModels.map(m => (
+                                                        <option key={`${m.provider}::${m.model_id}`} value={`${m.provider}::${m.model_id}`}>
+                                                            {m.name}
+                                                        </option>
+                                                    ))}
+                                                </select>
+                                            </div>
+                                            
+                                            <div>
+                                                <label className="block text-xs font-medium text-gray-600">
+                                                    Temperature ({model.params?.temperature || 0.7})
+                                                </label>
+                                                <input
+                                                    type="range"
+                                                    min="0"
+                                                    max="1"
+                                                    step="0.1"
+                                                    value={model.params?.temperature || 0.7}
+                                                    onChange={(e) => handleModelChange(index, 'temperature', e.target.value)}
+                                                    className="mt-1 block w-full"
+                                                />
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                            
+                            {/* Knowledge Base */}
+                            <div className="space-y-4">
+                                <h4 className="font-medium text-gray-900">Knowledge Base</h4>
+                                
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700">Attach Knowledge Base</label>
+                                    <select
+                                        value={formData.knowledge_base_id || 'none'}
+                                        onChange={(e) => setFormData({...formData, knowledge_base_id: e.target.value})}
+                                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm px-3 py-2 border"
+                                    >
+                                        <option value="none">None</option>
+                                        {knowledgeBases.map(kb => (
+                                            <option key={kb.id} value={kb.id}>
+                                                {kb.name}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
+                            </div>
+                            
+                            {/* Basic Settings */}
+                            <div className="space-y-4">
+                                <h4 className="font-medium text-gray-900">Basic Settings</h4>
+                                
+                                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                    <label className="flex items-center">
+                                        <input
+                                            type="checkbox"
+                                            checked={formData.stream}
+                                            onChange={(e) => setFormData({...formData, stream: e.target.checked})}
+                                            className="mr-2"
+                                        />
+                                        <span className="text-sm text-gray-700">Streaming</span>
+                                    </label>
+                                    
+                                    <label className="flex items-center">
+                                        <input
+                                            type="checkbox"
+                                            checked={formData.markdown}
+                                            onChange={(e) => setFormData({...formData, markdown: e.target.checked})}
+                                            className="mr-2"
+                                        />
+                                        <span className="text-sm text-gray-700">Markdown</span>
+                                    </label>
+                                    
+                                    <label className="flex items-center">
+                                        <input
+                                            type="checkbox"
+                                            checked={formData.enable_memory}
+                                            onChange={(e) => setFormData({...formData, enable_memory: e.target.checked})}
+                                            className="mr-2"
+                                        />
+                                        <span className="text-sm text-gray-700">Memory</span>
+                                    </label>
+                                    
+                                    <label className="flex items-center">
+                                        <input
+                                            type="checkbox"
+                                            checked={formData.enable_storage}
+                                            onChange={(e) => setFormData({...formData, enable_storage: e.target.checked})}
+                                            className="mr-2"
+                                        />
+                                        <span className="text-sm text-gray-700">Storage</span>
+                                    </label>
+                                </div>
+                            </div>
+                            
+                            {/* Advanced Settings */}
+                            <div className="space-y-4">
+                                <button
+                                    type="button"
+                                    onClick={() => setShowAdvanced(!showAdvanced)}
+                                    className="flex items-center text-sm font-medium text-gray-700"
+                                >
+                                    <i className={`fas fa-chevron-${showAdvanced ? 'down' : 'right'} mr-2`}></i>
+                                    Advanced Settings
+                                </button>
+                                
+                                {showAdvanced && (
+                                    <div className="space-y-4 pl-6">
+                                        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                                            <label className="flex items-center">
+                                                <input
+                                                    type="checkbox"
+                                                    checked={formData.add_history_to_context}
+                                                    onChange={(e) => setFormData({...formData, add_history_to_context: e.target.checked})}
+                                                    className="mr-2"
+                                                />
+                                                <span className="text-sm text-gray-700">Add History to Context</span>
+                                            </label>
+                                            
+                                            <label className="flex items-center">
+                                                <input
+                                                    type="checkbox"
+                                                    checked={formData.add_datetime_to_context}
+                                                    onChange={(e) => setFormData({...formData, add_datetime_to_context: e.target.checked})}
+                                                    className="mr-2"
+                                                />
+                                                <span className="text-sm text-gray-700">Add DateTime to Context</span>
+                                            </label>
+                                            
+                                            <label className="flex items-center">
+                                                <input
+                                                    type="checkbox"
+                                                    checked={formData.search_knowledge}
+                                                    onChange={(e) => setFormData({...formData, search_knowledge: e.target.checked})}
+                                                    className="mr-2"
+                                                />
+                                                <span className="text-sm text-gray-700">Search Knowledge</span>
+                                            </label>
+                                            
+                                            <label className="flex items-center">
+                                                <input
+                                                    type="checkbox"
+                                                    checked={formData.add_references}
+                                                    onChange={(e) => setFormData({...formData, add_references: e.target.checked})}
+                                                    className="mr-2"
+                                                />
+                                                <span className="text-sm text-gray-700">Add References</span>
+                                            </label>
+                                            
+                                            <label className="flex items-center">
+                                                <input
+                                                    type="checkbox"
+                                                    checked={formData.enable_user_memories}
+                                                    onChange={(e) => setFormData({...formData, enable_user_memories: e.target.checked})}
+                                                    className="mr-2"
+                                                />
+                                                <span className="text-sm text-gray-700">Enable User Memories</span>
+                                            </label>
+                                            
+                                            <label className="flex items-center">
+                                                <input
+                                                    type="checkbox"
+                                                    checked={formData.reasoning}
+                                                    onChange={(e) => setFormData({...formData, reasoning: e.target.checked})}
+                                                    className="mr-2"
+                                                />
+                                                <span className="text-sm text-gray-700">Reasoning Mode</span>
+                                            </label>
+                                        </div>
+                                        
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            <div>
+                                                <label className="block text-sm font-medium text-gray-700">Tool Call Limit</label>
+                                                <input
+                                                    type="number"
+                                                    value={formData.tool_call_limit}
+                                                    onChange={(e) => setFormData({...formData, tool_call_limit: parseInt(e.target.value)})}
+                                                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm px-3 py-2 border"
+                                                    min="1"
+                                                    max="100"
+                                                />
+                                            </div>
+                                            
+                                            <div>
+                                                <label className="block text-sm font-medium text-gray-700">History Runs</label>
+                                                <input
+                                                    type="number"
+                                                    value={formData.num_history_runs}
+                                                    onChange={(e) => setFormData({...formData, num_history_runs: parseInt(e.target.value)})}
+                                                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm px-3 py-2 border"
+                                                    min="0"
+                                                    max="20"
+                                                />
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                            
+                            <div className="flex justify-end space-x-3 pt-4 border-t">
+                                <button
+                                    type="button"
+                                    onClick={onClose}
+                                    className="bg-gray-100 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-200 transition-colors"
+                                    disabled={loading}
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    type="submit"
+                                    className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors disabled:bg-gray-300"
+                                    disabled={loading}
+                                >
+                                    {loading ? 'Saving...' : 'Save'}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            );
+        }
+        
+        // Knowledge Base Management Component
+        function KnowledgeBaseManagement() {
+            const [kbs, setKBs] = useState([]);
+            const [showCreateModal, setShowCreateModal] = useState(false);
+            const [showManageModal, setShowManageModal] = useState(false);
+            const [selectedKB, setSelectedKB] = useState(null);
+            const [loading, setLoading] = useState(false);
+            
+            useEffect(() => {
+                fetchKBs();
+            }, []);
+            
+            const fetchKBs = async () => {
+                try {
+                    const response = await fetch('/api/knowledge-bases');
+                    const data = await response.json();
+                    setKBs(data);
+                } catch (error) {
+                    console.error('Error fetching knowledge bases:', error);
+                }
+            };
+            
+            const handleCreateKB = async (kbData) => {
+                setLoading(true);
+                try {
+                    const response = await fetch('/api/knowledge-bases', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(kbData)
+                    });
+                    
+                    if (response.ok) {
+                        await fetchKBs();
+                        setShowCreateModal(false);
+                        alert('Knowledge base created successfully!');
+                    } else {
+                        const error = await response.json();
+                        alert(`Error: ${error.detail}`);
+                    }
+                } catch (error) {
+                    alert(`Error creating knowledge base: ${error.message}`);
+                } finally {
+                    setLoading(false);
+                }
+            };
+            
+            const handleDeleteKB = async (kbId) => {
+                if (!confirm('Are you sure you want to delete this knowledge base?')) return;
+                
+                try {
+                    const response = await fetch(`/api/knowledge-bases/${kbId}`, {
+                        method: 'DELETE'
+                    });
+                    
+                    if (response.ok) {
+                        await fetchKBs();
+                        alert('Knowledge base deleted successfully!');
+                    } else {
+                        const error = await response.json();
+                        alert(`Error: ${error.detail}`);
+                    }
+                } catch (error) {
+                    alert(`Error deleting knowledge base: ${error.message}`);
+                }
+            };
+            
+            const openManageModal = (kb) => {
+                setSelectedKB(kb);
+                setShowManageModal(true);
+            };
+            
+            return (
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                    <div className="flex justify-between items-center mb-6">
+                        <h2 className="text-2xl font-bold text-gray-900">Knowledge Base Management</h2>
+                        <button
+                            onClick={() => setShowCreateModal(true)}
+                            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+                        >
+                            <i className="fas fa-plus mr-2"></i>
+                            Create Knowledge Base
+                        </button>
+                    </div>
+                    
+                    <div className="bg-white shadow overflow-hidden sm:rounded-md">
+                        <ul className="divide-y divide-gray-200">
+                            {kbs.map(kb => (
+                                <li key={kb.id} className="hover:bg-gray-50 transition-colors">
+                                    <div className="px-4 py-4 sm:px-6">
+                                        <div className="flex items-center justify-between">
+                                            <div className="flex-1">
+                                                <h3 className="text-lg font-medium text-gray-900">
+                                                    {kb.name}
+                                                </h3>
+                                                <p className="mt-1 text-sm text-gray-500">
+                                                    {kb.description}
+                                                </p>
+                                                {kb.collection_name && (
+                                                    <p className="mt-2 text-sm text-gray-500">
+                                                        <i className="fas fa-database mr-1"></i>
+                                                        Collection: {kb.collection_name}
+                                                    </p>
+                                                )}
+                                            </div>
+                                            <div className="flex space-x-2">
+                                                <button
+                                                    onClick={() => openManageModal(kb)}
+                                                    className="bg-blue-100 text-blue-700 px-3 py-1 rounded hover:bg-blue-200 transition-colors"
+                                                >
+                                                    <i className="fas fa-folder-open"></i> Manage
+                                                </button>
+                                                <button
+                                                    onClick={() => handleDeleteKB(kb.id)}
+                                                    className="bg-red-100 text-red-700 px-3 py-1 rounded hover:bg-red-200 transition-colors"
+                                                >
+                                                    <i className="fas fa-trash"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </li>
+                            ))}
+                        </ul>
+                        
+                        {kbs.length === 0 && (
+                            <div className="text-center py-12">
+                                <i className="fas fa-brain text-6xl text-gray-300 mb-4"></i>
+                                <p className="text-gray-500">No knowledge bases yet. Create your first knowledge base!</p>
+                            </div>
+                        )}
+                    </div>
+                    
+                    {/* Create KB Modal */}
+                    {showCreateModal && (
+                        <KBModal
+                            onSave={handleCreateKB}
+                            onClose={() => setShowCreateModal(false)}
+                            loading={loading}
+                        />
+                    )}
+                    
+                    {/* Manage KB Modal */}
+                    {showManageModal && selectedKB && (
+                        <KBManageModal
+                            kb={selectedKB}
+                            onClose={() => setShowManageModal(false)}
+                        />
+                    )}
+                </div>
+            );
+        }
+        
+        // Knowledge Base Modal Component
+        function KBModal({ onSave, onClose, loading }) {
+            const [formData, setFormData] = useState({
+                name: '',
+                description: '',
+                collection_name: '',
+                embedding_model: 'BAAI/bge-small-en-v1.5',
+                chunk_size: 1000,
+                chunk_overlap: 200
+            });
+            
+            const handleSubmit = (e) => {
+                e.preventDefault();
+                onSave(formData);
+            };
+            
+            return (
+                <div className="fixed inset-0 modal-backdrop flex items-center justify-center z-50">
+                    <div className="bg-white rounded-lg shadow-xl max-w-md w-full slide-in">
+                        <div className="px-6 py-4 border-b border-gray-200">
+                            <h3 className="text-lg font-medium text-gray-900">Create Knowledge Base</h3>
+                        </div>
+                        
+                        <form onSubmit={handleSubmit} className="p-6 space-y-4">
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700">Name</label>
+                                <input
+                                    type="text"
+                                    value={formData.name}
+                                    onChange={(e) => setFormData({...formData, name: e.target.value})}
+                                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm px-3 py-2 border"
+                                    required
+                                />
+                            </div>
+                            
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700">Description</label>
+                                <input
+                                    type="text"
+                                    value={formData.description}
+                                    onChange={(e) => setFormData({...formData, description: e.target.value})}
+                                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm px-3 py-2 border"
+                                />
+                            </div>
+                            
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700">Collection Name (optional)</label>
+                                <input
+                                    type="text"
+                                    value={formData.collection_name}
+                                    onChange={(e) => setFormData({...formData, collection_name: e.target.value})}
+                                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm px-3 py-2 border"
+                                />
+                            </div>
+                            
+                            <div className="flex justify-end space-x-3 pt-4">
+                                <button
+                                    type="button"
+                                    onClick={onClose}
+                                    className="bg-gray-100 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-200 transition-colors"
+                                    disabled={loading}
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    type="submit"
+                                    className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors disabled:bg-gray-300"
+                                    disabled={loading}
+                                >
+                                    {loading ? 'Creating...' : 'Create'}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            );
+        }
+        
+        // Knowledge Base Management Modal
+        function KBManageModal({ kb, onClose }) {
+            const [documents, setDocuments] = useState([]);
+            const [uploading, setUploading] = useState(false);
+            const [selectedFiles, setSelectedFiles] = useState([]);
+            const [kbHealth, setKbHealth] = useState(null);
+            const [repairing, setRepairing] = useState(false);
+            const fileInputRef = useRef(null);
+            
+            useEffect(() => {
+                fetchDocuments();
+                checkKbHealth();
+            }, []);
+            
+            const fetchDocuments = async () => {
+                try {
+                    const response = await fetch(`/api/knowledge-bases/${kb.id}/documents`);
+                    const data = await response.json();
+                    setDocuments(data);
+                } catch (error) {
+                    console.error('Error fetching documents:', error);
+                }
+            };
+            
+            const checkKbHealth = async () => {
+                try {
+                    const response = await fetch(`/api/knowledge-bases/${kb.id}/health`);
+                    const data = await response.json();
+                    setKbHealth(data);
+                } catch (error) {
+                    console.error('Error checking KB health:', error);
+                }
+            };
+            
+            const handleRepair = async () => {
+                if (!confirm('This will regenerate embeddings for all documents missing them. Continue?')) return;
+                
+                setRepairing(true);
+                try {
+                    const response = await fetch(`/api/knowledge-bases/${kb.id}/repair`, {
+                        method: 'POST'
+                    });
+                    
+                    const result = await response.json();
+                    
+                    if (response.ok) {
+                        alert(`Successfully repaired ${result.repaired} embeddings. ${result.failed > 0 ? `Failed: ${result.failed}` : ''}`);
+                        await fetchDocuments();
+                        await checkKbHealth();
+                    } else {
+                        alert(`Error: ${result.detail || 'Repair failed'}`);
+                    }
+                } catch (error) {
+                    alert(`Error repairing embeddings: ${error.message}`);
+                } finally {
+                    setRepairing(false);
+                }
+            };
+            
+            const handleFileSelect = (e) => {
+                const files = Array.from(e.target.files);
+                setSelectedFiles(files);
+            };
+            
+            const handleUpload = async () => {
+                if (selectedFiles.length === 0) {
+                    alert('Please select files to upload');
+                    return;
+                }
+                
+                setUploading(true);
+                const formData = new FormData();
+                selectedFiles.forEach(file => {
+                    formData.append('files', file);
+                });
+                
+                try {
+                    const response = await fetch(`/api/knowledge-bases/${kb.id}/documents`, {
+                        method: 'POST',
+                        body: formData
+                    });
+                    
+                    const result = await response.json();
+                    
+                    if (response.ok) {
+                        alert(`Successfully processed ${result.success} file(s). ${result.failed > 0 ? `Failed: ${result.failed}` : ''}`);
+                        setSelectedFiles([]);
+                        if (fileInputRef.current) {
+                            fileInputRef.current.value = '';
+                        }
+                        await fetchDocuments();
+                    } else {
+                        alert(`Error: ${result.detail || 'Upload failed'}`);
+                    }
+                } catch (error) {
+                    alert(`Error uploading files: ${error.message}`);
+                } finally {
+                    setUploading(false);
+                }
+            };
+            
+            const handleDeleteDocument = async (docPath) => {
+                if (!confirm(`Delete all chunks from ${docPath}?`)) return;
+                
+                // Since we group by file, we need to delete all chunks for this file
+                // This would need backend support for batch deletion
+                alert('Document deletion coming soon');
+                await fetchDocuments();
+            };
+            
+            const handleClearAll = async () => {
+                if (!confirm('Are you sure you want to delete ALL documents from this knowledge base?')) return;
+                
+                try {
+                    const response = await fetch(`/api/knowledge-bases/${kb.id}/documents`, {
+                        method: 'DELETE'
+                    });
+                    
+                    if (response.ok) {
+                        alert('All documents cleared');
+                        await fetchDocuments();
+                    }
+                } catch (error) {
+                    alert(`Error clearing documents: ${error.message}`);
+                }
+            };
+            
+            const supportedFormats = [
+                '.txt', '.md', '.pdf', '.docx', '.xlsx', '.pptx', 
+                '.html', '.epub', '.py', '.js', '.json', '.csv'
+            ];
+            
+            return (
+                <div className="fixed inset-0 modal-backdrop flex items-center justify-center z-50 p-4">
+                    <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col slide-in">
+                        <div className="px-6 py-4 border-b border-gray-200">
+                            <div className="flex items-center justify-between">
+                                <h3 className="text-lg font-medium text-gray-900">
+                                    Manage Knowledge Base: {kb.name}
+                                </h3>
+                                <button
+                                    onClick={onClose}
+                                    className="text-gray-400 hover:text-gray-600"
+                                >
+                                    <i className="fas fa-times"></i>
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div className="flex-1 overflow-y-auto p-6">
+                            {/* Health Status Section */}
+                            {kbHealth && kbHealth.needs_repair && (
+                                <div className="mb-6 bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                                    <div className="flex items-start">
+                                        <i className="fas fa-exclamation-triangle text-yellow-600 mt-1 mr-3"></i>
+                                        <div className="flex-1">
+                                            <h4 className="font-medium text-yellow-900 mb-2">
+                                                Embeddings Need Repair
+                                            </h4>
+                                            <p className="text-sm text-yellow-800 mb-3">
+                                                {kbHealth.chunks_without_embeddings} out of {kbHealth.total_chunks} chunks are missing embeddings.
+                                                This will affect search performance.
+                                            </p>
+                                            {kbHealth.problem_files && kbHealth.problem_files.length > 0 && (
+                                                <details className="mb-3">
+                                                    <summary className="text-sm text-yellow-800 cursor-pointer hover:text-yellow-900">
+                                                        View affected files ({kbHealth.problem_files.length})
+                                                    </summary>
+                                                    <ul className="mt-2 text-xs text-yellow-700 ml-4">
+                                                        {kbHealth.problem_files.map((file, idx) => (
+                                                            <li key={idx}>
+                                                                {file.file}: {file.missing_embeddings}/{file.total_chunks} chunks missing
+                                                            </li>
+                                                        ))}
+                                                    </ul>
+                                                </details>
+                                            )}
+                                            <button
+                                                onClick={handleRepair}
+                                                disabled={repairing}
+                                                className="bg-yellow-600 text-white px-4 py-2 rounded-lg hover:bg-yellow-700 disabled:bg-gray-300 text-sm"
+                                            >
+                                                {repairing ? (
+                                                    <>
+                                                        <i className="fas fa-spinner fa-spin mr-2"></i>
+                                                        Repairing...
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        <i className="fas fa-wrench mr-2"></i>
+                                                        Repair Embeddings
+                                                    </>
+                                                )}
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+                            
+                            {/* Success Status */}
+                            {kbHealth && !kbHealth.needs_repair && kbHealth.total_chunks > 0 && (
+                                <div className="mb-6 bg-green-50 border border-green-200 rounded-lg p-4">
+                                    <div className="flex items-center">
+                                        <i className="fas fa-check-circle text-green-600 mr-3"></i>
+                                        <div>
+                                            <h4 className="font-medium text-green-900">All Embeddings Present</h4>
+                                            <p className="text-sm text-green-700">
+                                                All {kbHealth.total_chunks} chunks have embeddings. Knowledge base is healthy.
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+                            
+                            {/* Upload Section */}
+                            <div className="mb-6">
+                                <h4 className="font-medium text-gray-900 mb-4">Upload Documents</h4>
+                                
+                                <div className="border-2 border-dashed border-gray-300 rounded-lg p-6">
+                                    <div className="text-center">
+                                        <i className="fas fa-cloud-upload-alt text-4xl text-gray-400 mb-3"></i>
+                                        <p className="text-sm text-gray-600 mb-2">
+                                            Select files to upload or drag and drop
+                                        </p>
+                                        <p className="text-xs text-gray-500 mb-4">
+                                            Supported formats: {supportedFormats.join(', ')}
+                                        </p>
+                                        
+                                        <input
+                                            ref={fileInputRef}
+                                            type="file"
+                                            multiple
+                                            onChange={handleFileSelect}
+                                            accept={supportedFormats.join(',')}
+                                            className="hidden"
+                                            id="file-upload"
+                                        />
+                                        <label
+                                            htmlFor="file-upload"
+                                            className="inline-block bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 cursor-pointer"
+                                        >
+                                            Choose Files
+                                        </label>
+                                    </div>
+                                    
+                                    {selectedFiles.length > 0 && (
+                                        <div className="mt-4">
+                                            <p className="text-sm font-medium text-gray-700 mb-2">
+                                                Selected files ({selectedFiles.length}):
+                                            </p>
+                                            <ul className="text-sm text-gray-600 max-h-32 overflow-y-auto">
+                                                {selectedFiles.map((file, idx) => (
+                                                    <li key={idx} className="flex items-center">
+                                                        <i className="fas fa-file mr-2"></i>
+                                                        {file.name} ({(file.size / 1024).toFixed(1)} KB)
+                                                    </li>
+                                                ))}
+                                            </ul>
+                                            
+                                            <div className="mt-4 flex justify-center">
+                                                <button
+                                                    onClick={handleUpload}
+                                                    disabled={uploading}
+                                                    className="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 disabled:bg-gray-300"
+                                                >
+                                                    {uploading ? (
+                                                        <>
+                                                            <i className="fas fa-spinner fa-spin mr-2"></i>
+                                                            Processing...
+                                                        </>
+                                                    ) : (
+                                                        <>
+                                                            <i className="fas fa-upload mr-2"></i>
+                                                            Upload & Process
+                                                        </>
+                                                    )}
+                                                </button>
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                            
+                            {/* Documents List */}
+                            <div>
+                                <div className="flex items-center justify-between mb-4">
+                                    <h4 className="font-medium text-gray-900">
+                                        Documents ({documents.length})
+                                    </h4>
+                                    {documents.length > 0 && (
+                                        <button
+                                            onClick={handleClearAll}
+                                            className="text-sm bg-red-100 text-red-700 px-3 py-1 rounded hover:bg-red-200"
+                                        >
+                                            <i className="fas fa-trash-alt mr-1"></i>
+                                            Clear All
+                                        </button>
+                                    )}
+                                </div>
+                                
+                                {documents.length === 0 ? (
+                                    <div className="text-center py-8 bg-gray-50 rounded-lg">
+                                        <i className="fas fa-folder-open text-4xl text-gray-300 mb-3"></i>
+                                        <p className="text-gray-500">No documents uploaded yet</p>
+                                    </div>
+                                ) : (
+                                    <div className="space-y-2">
+                                        {documents.map((doc, idx) => (
+                                            <div key={idx} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100">
+                                                <div className="flex items-center flex-1">
+                                                    <i className="fas fa-file-alt text-gray-400 mr-3"></i>
+                                                    <div>
+                                                        <p className="text-sm font-medium text-gray-900">
+                                                            {doc.file_path}
+                                                            {doc.needs_repair && (
+                                                                <span className="ml-2 text-xs bg-yellow-100 text-yellow-800 px-2 py-0.5 rounded">
+                                                                    <i className="fas fa-exclamation-triangle mr-1"></i>
+                                                                    Missing embeddings
+                                                                </span>
+                                                            )}
+                                                        </p>
+                                                        <p className="text-xs text-gray-500">
+                                                            {doc.chunks} chunks
+                                                            {doc.chunks_with_embeddings !== undefined && (
+                                                                <span> ({doc.chunks_with_embeddings} with embeddings)</span>
+                                                            )}
+                                                            • Added {new Date(doc.created_at).toLocaleDateString()}
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                                <button
+                                                    onClick={() => handleDeleteDocument(doc.file_path)}
+                                                    className="text-red-600 hover:text-red-800 px-2"
+                                                >
+                                                    <i className="fas fa-times"></i>
+                                                </button>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                        
+                        <div className="px-6 py-4 border-t border-gray-200">
+                            <div className="flex justify-end">
+                                <button
+                                    onClick={onClose}
+                                    className="bg-gray-100 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-200 transition-colors"
+                                >
+                                    Close
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+        
+        // Chat Component (simplified version from before)
+        function ChatInterface() {
+            const [agents, setAgents] = useState([]);
+            const [knowledgeBases, setKnowledgeBases] = useState([]);
+            const [selectedAgent, setSelectedAgent] = useState(null);
+            const [selectedKB, setSelectedKB] = useState(null);
+            const [messages, setMessages] = useState([]);
+            const [inputMessage, setInputMessage] = useState('');
+            const [isConnected, setIsConnected] = useState(false);
+            const [isTyping, setIsTyping] = useState(false);
+            const [isWorkflowMode, setIsWorkflowMode] = useState(false);
+            const [currentActivity, setCurrentActivity] = useState(null);
+            const [streamingMessage, setStreamingMessage] = useState(''); // For accumulating chunks
+            const [isStreaming, setIsStreaming] = useState(false); // Track streaming state
+            const messagesEndRef = useRef(null);
+            const wsRef = useRef(null);
+            const clientIdRef = useRef(`client-${Date.now()}`);
+            const streamingBufferRef = useRef(''); // For accumulating chunks reliably
+            
+            useEffect(() => {
+                fetchAgents();
+                fetchKnowledgeBases();
+                connectWebSocket();
+                
+                return () => {
+                    if (wsRef.current) {
+                        wsRef.current.close();
+                    }
+                };
+            }, []);
+            
+            useEffect(() => {
+                messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+            }, [messages, isTyping, streamingMessage]);
+            
+            const fetchAgents = async () => {
+                try {
+                    const response = await fetch('/api/agents');
+                    const data = await response.json();
+                    setAgents(data);
+                } catch (error) {
+                    console.error('Error fetching agents:', error);
+                }
+            };
+            
+            const fetchKnowledgeBases = async () => {
+                try {
+                    const response = await fetch('/api/knowledge-bases');
+                    const data = await response.json();
+                    setKnowledgeBases(data);
+                } catch (error) {
+                    console.error('Error fetching knowledge bases:', error);
+                }
+            };
+            
+            const connectWebSocket = () => {
+                const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+                const wsUrl = `${protocol}//${window.location.host}/ws/${clientIdRef.current}`;
+                
+                const ws = new WebSocket(wsUrl);
+                
+                ws.onopen = () => {
+                    setIsConnected(true);
+                    addSystemMessage('Connected to server');
+                };
+                
+                ws.onclose = () => {
+                    setIsConnected(false);
+                    addSystemMessage('Disconnected from server');
+                    setTimeout(connectWebSocket, 3000);
+                };
+                
+                ws.onmessage = (event) => {
+                    const data = JSON.parse(event.data);
+                    handleWebSocketMessage(data);
+                };
+                
+                wsRef.current = ws;
+            };
+            
+            const handleWebSocketMessage = (data) => {
+                switch (data.type) {
+                    case 'agent_loaded':
+                        addSystemMessage(`Agent loaded successfully`);
+                        setIsWorkflowMode(false);
+                        break;
+                    case 'workflow_loaded':
+                        addSystemMessage(data.message || 'Therapeutic session started');
+                        setIsWorkflowMode(true);
+                        setCurrentActivity(data.current_activity);
+                        setSelectedAgent(null); // Clear agent selection
+                        break;
+                    case 'workflow_chunk':
+                        // Handle streaming chunks - accumulate them
+                        if (!isStreaming) {
+                            setIsStreaming(true);
+                            setIsTyping(true);
+                            // Don't reset buffer - keep accumulating all chunks
+                            if (!streamingBufferRef.current) {
+                                streamingBufferRef.current = '';
+                            }
+                        }
+                        streamingBufferRef.current += data.content;
+                        setStreamingMessage(streamingBufferRef.current);
+                        break;
+                    case 'workflow_complete':
+                        // CRITICAL: Use streamed buffer if we have it, otherwise fallback to server content
+                        const hasStreamedContent = streamingBufferRef.current && streamingBufferRef.current.trim();
+                        const hasServerContent = data.content && data.content.trim();
+                        
+                        if (hasStreamedContent) {
+                            // PRIMARY PATH: We successfully accumulated streaming chunks
+                            addAssistantMessage(streamingBufferRef.current);
+                            console.log('✅ Using live-streamed content:', streamingBufferRef.current.length, 'chars');
+                        } else if (hasServerContent) {
+                            // FALLBACK PATH: No streaming or streaming failed - use server's complete content
+                            addAssistantMessage(data.content);
+                            console.log('⚠️ Fallback: Using server content (streaming failed):', data.content.length, 'chars');
+                        } else {
+                            // ERROR PATH: No content at all
+                            console.error('❌ No content available from streaming or server');
+                        }
+                        
+                        // Clean up streaming state
+                        setStreamingMessage('');
+                        streamingBufferRef.current = '';
+                        setIsStreaming(false);
+                        setIsTyping(false);
+                        
+                        // Update activity metadata
+                        setCurrentActivity(data.current_activity);
+                        break;
+                    case 'chat_response':
+                        addAssistantMessage(data.content);
+                        setIsTyping(false);
+                        break;
+                    case 'typing':
+                        setIsTyping(data.status);
+                        break;
+                    case 'error':
+                        addSystemMessage(`Error: ${data.message}`);
+                        setIsTyping(false);
+                        setIsStreaming(false);
+                        setStreamingMessage('');
+                        streamingBufferRef.current = '';
+                        break;
+                }
+            };
+            
+            const sendWebSocketMessage = (message) => {
+                if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+                    wsRef.current.send(JSON.stringify(message));
+                }
+            };
+            
+            const loadAgent = () => {
+                if (!selectedAgent) {
+                    alert('Please select an agent');
+                    return;
+                }
+                
+                sendWebSocketMessage({
+                    type: 'load_agent',
+                    agent_id: selectedAgent,
+                    kb_id: selectedKB
+                });
+            };
+            
+            const sendMessage = () => {
+                if (!inputMessage.trim()) return;
+                
+                if (!isWorkflowMode && !selectedAgent) {
+                    alert('Please select an agent or start a therapeutic session first');
+                    return;
+                }
+                
+                addUserMessage(inputMessage);
+                sendWebSocketMessage({
+                    type: 'chat_message',
+                    message: inputMessage
+                });
+                setInputMessage('');
+            };
+            
+            const startTherapeuticSession = () => {
+                sendWebSocketMessage({
+                    type: 'load_workflow',
+                    user_id: clientIdRef.current
+                });
+                setMessages([]); // Clear previous messages
+            };
+            
+            const exitWorkflowMode = () => {
+                setIsWorkflowMode(false);
+                setCurrentActivity(null);
+                addSystemMessage('Therapeutic session ended. Please select an agent to continue.');
+            };
+            
+            const addSystemMessage = (text) => {
+                setMessages(prev => [...prev, { type: 'system', content: text, timestamp: new Date() }]);
+            };
+            
+            const addUserMessage = (text) => {
+                setMessages(prev => [...prev, { type: 'user', content: text, timestamp: new Date() }]);
+            };
+            
+            const addAssistantMessage = (text) => {
+                setMessages(prev => [...prev, { type: 'assistant', content: text, timestamp: new Date() }]);
+            };
+            
+            return (
+                <div className="flex flex-col h-full">
+                    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 w-full flex-1 flex flex-col" style={{minHeight: '0'}}>
+                        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 flex-1" style={{minHeight: '0'}}>
+                            {/* Sidebar */}
+                            <div className="lg:col-span-1">
+                                <div className="bg-white rounded-lg shadow p-4 h-fit">
+                                    <h3 className="font-medium text-gray-900 mb-4">Configuration</h3>
+                                
+                                <div className="mb-4">
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                        Select Agent
+                                    </label>
+                                    <select
+                                        value={selectedAgent || ''}
+                                        onChange={(e) => setSelectedAgent(e.target.value)}
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    >
+                                        <option value="">Choose an agent...</option>
+                                        {agents.map(agent => (
+                                            <option key={agent.id} value={agent.id}>
+                                                {agent.name}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
+                                
+                                <div className="mb-4">
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                        Knowledge Base (Optional)
+                                    </label>
+                                    <select
+                                        value={selectedKB || ''}
+                                        onChange={(e) => setSelectedKB(e.target.value)}
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    >
+                                        <option value="">None</option>
+                                        {knowledgeBases.map(kb => (
+                                            <option key={kb.id} value={kb.id}>
+                                                {kb.name}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
+                                
+                                <button
+                                    onClick={loadAgent}
+                                    disabled={isWorkflowMode}
+                                    className={`w-full px-4 py-2 rounded-lg transition-colors ${
+                                        isWorkflowMode 
+                                            ? 'bg-gray-300 text-gray-500 cursor-not-allowed' 
+                                            : 'bg-blue-600 text-white hover:bg-blue-700'
+                                    }`}
+                                >
+                                    <i className="fas fa-robot mr-2"></i>
+                                    Load Agent
+                                </button>
+                                
+                                <div className="mt-4 pt-4 border-t border-gray-200">
+                                    <h3 className="font-medium text-gray-900 mb-3">Therapeutic Mode</h3>
+                                    {!isWorkflowMode ? (
+                                        <button
+                                            onClick={startTherapeuticSession}
+                                            disabled={!isConnected}
+                                            className="w-full bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors disabled:bg-gray-300 disabled:text-gray-500"
+                                        >
+                                            <i className="fas fa-spa mr-2"></i>
+                                            Start Therapeutic Session
+                                        </button>
+                                    ) : (
+                                        <div>
+                                            <div className="mb-3 p-3 bg-purple-50 rounded-lg">
+                                                <p className="text-sm text-purple-700">
+                                                    <i className="fas fa-check-circle mr-1"></i>
+                                                    Session Active
+                                                </p>
+                                                {currentActivity && (
+                                                    <p className="text-xs text-purple-600 mt-1">
+                                                        Current: {currentActivity.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                                                    </p>
+                                                )}
+                                            </div>
+                                            <button
+                                                onClick={exitWorkflowMode}
+                                                className="w-full bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition-colors"
+                                            >
+                                                <i className="fas fa-times-circle mr-2"></i>
+                                                Exit Session
+                                            </button>
+                                        </div>
+                                    )}
+                                </div>
+                                
+                                <div className="mt-4 pt-4 border-t border-gray-200">
+                                    <div className="flex items-center text-sm">
+                                        <div className={`w-2 h-2 rounded-full mr-2 ${isConnected ? 'bg-green-500' : 'bg-red-500'}`}></div>
+                                        <span className="text-gray-600">
+                                            {isConnected ? 'Connected' : 'Disconnected'}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        {/* Chat Area */}
+                        <div className="lg:col-span-3 flex flex-col">
+                            <div className="bg-white rounded-lg shadow flex flex-col flex-1" style={{minHeight: '0'}}>
+                                <div className="flex-1 overflow-y-auto p-4" style={{minHeight: '0'}}>
+                                    {messages.length === 0 && (
+                                        <div className="text-center text-gray-500 mt-20">
+                                            <i className={`fas ${isWorkflowMode ? 'fa-spa' : 'fa-comments'} text-6xl mb-4 text-gray-300`}></i>
+                                            <p className="text-lg">No messages yet</p>
+                                            <p className="text-sm mt-2">
+                                                {isWorkflowMode 
+                                                    ? "Say hello to begin your therapeutic journey!"
+                                                    : "Select an agent and start chatting!"}
+                                            </p>
+                                        </div>
+                                    )}
+                                    
+                                    {messages.map((message, index) => (
+                                        <div key={index} className={`mb-4 ${
+                                            message.type === 'user' ? 'text-right' : 
+                                            message.type === 'system' ? 'text-center' : 'text-left'
+                                        }`}>
+                                            {message.type === 'system' ? (
+                                                <span className="inline-block bg-yellow-100 text-yellow-800 px-3 py-1 rounded-lg text-sm">
+                                                    {message.content}
+                                                </span>
+                                            ) : message.type === 'user' ? (
+                                                <span className="inline-block bg-blue-600 text-white px-4 py-2 rounded-lg max-w-md">
+                                                    {message.content}
+                                                </span>
+                                            ) : (
+                                                <div className="inline-block bg-gray-100 px-4 py-2 rounded-lg max-w-md">
+                                                    <div 
+                                                        className="markdown-content"
+                                                        dangerouslySetInnerHTML={{ 
+                                                            __html: parseMarkdown(message.content) 
+                                                        }}
+                                                    />
+                                                </div>
+                                            )}
+                                        </div>
+                                    ))}
+                                    
+                                    {/* Show LIVE streaming message as it builds - SINGLE display */}
+                                    {isStreaming && streamingMessage && (
+                                        <div className="mb-4 text-left fade-in">
+                                            <div className="inline-block bg-gray-100 px-4 py-2 rounded-lg max-w-md">
+                                                <div 
+                                                    className="markdown-content"
+                                                    dangerouslySetInnerHTML={{ 
+                                                        __html: parseMarkdown(streamingMessage) 
+                                                    }} 
+                                                />
+                                                <span className="inline-block ml-2 text-gray-500">
+                                                    <i className="fas fa-circle-notch fa-spin text-xs"></i>
+                                                </span>
+                                            </div>
+                                        </div>
+                                    )}
+                                    
+                                    {/* Show typing indicator only when typing but not streaming */}
+                                    {isTyping && !isStreaming && (
+                                        <div className="mb-4">
+                                            <div className="typing-indicator">
+                                                <span></span>
+                                                <span></span>
+                                                <span></span>
+                                            </div>
+                                        </div>
+                                    )}
+                                    
+                                    <div ref={messagesEndRef} />
+                                </div>
+                                
+                                <div className="border-t border-gray-200 p-4">
+                                    <div className="flex space-x-3">
+                                        <input
+                                            type="text"
+                                            value={inputMessage}
+                                            onChange={(e) => setInputMessage(e.target.value)}
+                                            onKeyPress={(e) => e.key === 'Enter' && sendMessage()}
+                                            placeholder="Type your message..."
+                                            className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                            disabled={!isConnected || (!selectedAgent && !isWorkflowMode)}
+                                        />
+                                        {/* This needs to change the input to voice mode and then start listening. */}
+                                        <button
+                                            className="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors"
+                                            title="Open Voice Mode"
+                                        >
+                                            <i className="fas fa-microphone"></i>
+                                        </button>
+                                        <button
+                                            onClick={sendMessage}
+                                            disabled={!isConnected || (!selectedAgent && !isWorkflowMode) || !inputMessage.trim()}
+                                            className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors disabled:bg-gray-300"
+                                        >
+                                            <i className="fas fa-paper-plane"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            );
+        }
+        
+        // Multi-Agent Compare Component  
+        function MultiAgentCompare() {
+            const [agents, setAgents] = useState([]);
+            const [knowledgeBases, setKnowledgeBases] = useState([]);
+            const [selectedAgent, setSelectedAgent] = useState(null);
+            const [selectedKB, setSelectedKB] = useState(null);
+            const [agentLoaded, setAgentLoaded] = useState(false);
+            const [loadedAgentName, setLoadedAgentName] = useState('');
+            const [loadedKBName, setLoadedKBName] = useState('');
+            // Only agent mode for multi-agent page
+            const [message, setMessage] = useState('');
+            // Track messages per provider like single chat
+            const [providerMessages, setProviderMessages] = useState({
+                integro: [],
+                openai: [],
+                anthropic: [],
+                gemini: []
+            });
+            // Shared conversation history for context
+            const [sharedConversationHistory, setSharedConversationHistory] = useState([]);
+            // Track streaming state per provider
+            const [streamingMessages, setStreamingMessages] = useState({
+                integro: '',
+                openai: '',
+                anthropic: '',
+                gemini: ''
+            });
+            const [isStreaming, setIsStreaming] = useState({
+                integro: false,
+                openai: false,
+                anthropic: false,
+                gemini: false
+            });
+            const streamingBuffers = useRef({
+                integro: '',
+                openai: '',
+                anthropic: '',
+                gemini: ''
+            });
+            const [isConnected, setIsConnected] = useState(false);
+            const [availableProviders, setAvailableProviders] = useState({});
+            // Provider visibility toggles
+            const [enabledProviders, setEnabledProviders] = useState({
+                integro: true,
+                openai: true,
+                anthropic: true,
+                gemini: true
+            });
+            const wsRef = useRef(null);
+            const clientIdRef = useRef(`multi-agent-${Date.now()}`);
+            const messagesEndRef = useRef(null);
+            // Create refs for all column scroll containers
+            const columnRefs = useRef({
+                integro: null,
+                openai: null,
+                anthropic: null,
+                gemini: null
+            });
+            
+            useEffect(() => {
+                fetchAgents();
+                fetchKnowledgeBases();
+                connectMultiAgentWebSocket();
+                
+                return () => {
+                    if (wsRef.current) {
+                        wsRef.current.close();
+                    }
+                };
+            }, []);
+            
+            const fetchAgents = async () => {
+                try {
+                    const response = await fetch('/api/agents');
+                    const data = await response.json();
+                    setAgents(data);
+                } catch (error) {
+                    console.error('Error fetching agents:', error);
+                }
+            };
+            
+            const fetchKnowledgeBases = async () => {
+                try {
+                    const response = await fetch('/api/knowledge-bases');
+                    const data = await response.json();
+                    setKnowledgeBases(data);
+                } catch (error) {
+                    console.error('Error fetching knowledge bases:', error);
+                }
+            };
+            
+            const connectMultiAgentWebSocket = () => {
+                const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+                const wsUrl = `${protocol}//${window.location.host}/ws/multi-agent/${clientIdRef.current}`;
+                
+                const ws = new WebSocket(wsUrl);
+                
+                ws.onopen = () => {
+                    setIsConnected(true);
+                    console.log('Connected to multi-agent WebSocket');
+                };
+                
+                ws.onclose = () => {
+                    setIsConnected(false);
+                    console.log('Disconnected from multi-agent WebSocket');
+                    setTimeout(connectMultiAgentWebSocket, 3000);
+                };
+                
+                ws.onmessage = (event) => {
+                    const data = JSON.parse(event.data);
+                    handleMultiAgentMessage(data);
+                };
+                
+                wsRef.current = ws;
+            };
+            
+            const handleMultiAgentMessage = (data) => {
+                switch (data.type) {
+                    case 'multi_agent_ready':
+                        setAvailableProviders(data.providers);
+                        break;
+                    
+                    case 'agent_loaded':
+                        setAgentLoaded(true);
+                        const agent = agents.find(a => a.id === data.agent_id);
+                        const kb = knowledgeBases.find(k => k.id === data.kb_id);
+                        setLoadedAgentName(agent?.name || data.agent_id);
+                        setLoadedKBName(kb?.name || '');
+                        console.log('Agent loaded successfully:', data.agent_id);
+                        break;
+                    
+                    case 'workflow_loaded':
+                        setAgentLoaded(true);
+                        console.log('Workflow loaded successfully:', data.session_id);
+                        break;
+                    
+                    case 'typing_status':
+                        // Handle typing status if needed
+                        Object.keys(data.providers).forEach(provider => {
+                            if (!data.providers[provider]) {
+                                // If typing stopped but no complete message, clear streaming
+                                setIsStreaming(prev => ({
+                                    ...prev,
+                                    [provider]: data.providers[provider]
+                                }));
+                            }
+                        });
+                        break;
+                    
+                    case 'provider_chunk':
+                        const provider = data.provider;
+                        // Accumulate chunks
+                        streamingBuffers.current[provider] += data.content;
+                        setStreamingMessages(prev => ({
+                            ...prev,
+                            [provider]: streamingBuffers.current[provider]
+                        }));
+                        setIsStreaming(prev => ({
+                            ...prev,
+                            [provider]: true
+                        }));
+                        break;
+                    
+                    case 'provider_complete':
+                        const completeProvider = data.provider;
+                        // Add final message to history
+                        const finalContent = streamingBuffers.current[completeProvider] || data.content;
+                        setProviderMessages(prev => ({
+                            ...prev,
+                            [completeProvider]: [...prev[completeProvider], {
+                                type: 'assistant',
+                                content: finalContent,
+                                timestamp: new Date()
+                            }]
+                        }));
+                        
+                        // Update shared conversation history when Integro completes
+                        // (using Integro as the reference for the shared history)
+                        if (completeProvider === 'integro' && finalContent) {
+                            setSharedConversationHistory(prev => [
+                                ...prev,
+                                {
+                                    role: 'assistant',
+                                    content: finalContent
+                                }
+                            ]);
+                        }
+                        
+                        // Clear streaming state
+                        streamingBuffers.current[completeProvider] = '';
+                        setStreamingMessages(prev => ({
+                            ...prev,
+                            [completeProvider]: ''
+                        }));
+                        setIsStreaming(prev => ({
+                            ...prev,
+                            [completeProvider]: false
+                        }));
+                        break;
+                    
+                    case 'provider_error':
+                        setResponses(prev => ({
+                            ...prev,
+                            [data.provider]: {
+                                ...prev[data.provider],
+                                content: `Error: ${data.error}`,
+                                isTyping: false,
+                                complete: true
+                            }
+                        }));
+                        break;
+                    
+                    case 'error':
+                        console.error('Multi-agent error:', data.message);
+                        break;
+                }
+            };
+            
+            const loadIntegroAgent = () => {
+                if (!selectedAgent) {
+                    alert('Please select an agent');
+                    return;
+                }
+                
+                if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+                    wsRef.current.send(JSON.stringify({
+                        type: 'load_agent',
+                        agent_id: selectedAgent,
+                        kb_id: selectedKB
+                    }));
+                    // Don't set agentLoaded here - wait for confirmation from server
+                } else {
+                    alert('WebSocket connection is not ready. Please try again.');
+                }
+            };
+            
+            // Workflow mode removed - only agent mode for multi-agent page
+            
+            const sendMessage = () => {
+                if (!message.trim() || !isConnected) return;
+                
+                if (!agentLoaded) {
+                    alert('Please load an agent first');
+                    return;
+                }
+                
+                // Build conversation history from shared history
+                const conversationHistory = [...sharedConversationHistory];
+                
+                // Add the new user message to the conversation history
+                conversationHistory.push({
+                    role: 'user',
+                    content: message
+                });
+                
+                // Update shared conversation history
+                setSharedConversationHistory(conversationHistory);
+                
+                console.log('Sending conversation history:', conversationHistory);
+                
+                // Add user message to all provider histories for display
+                const userMsg = { type: 'user', content: message, timestamp: new Date() };
+                setProviderMessages(prev => ({
+                    integro: [...prev.integro, userMsg],
+                    openai: [...prev.openai, userMsg],
+                    anthropic: [...prev.anthropic, userMsg],
+                    gemini: [...prev.gemini, userMsg]
+                }));
+                
+                // Clear streaming buffers
+                streamingBuffers.current = {
+                    integro: '',
+                    openai: '',
+                    anthropic: '',
+                    gemini: ''
+                };
+                
+                // Set all providers to streaming state
+                setIsStreaming({
+                    integro: true,
+                    openai: true,
+                    anthropic: true,
+                    gemini: true
+                });
+                
+                // Log and send message with full conversation history
+                console.log('Full conversation history being sent:', conversationHistory);
+                if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+                    wsRef.current.send(JSON.stringify({
+                        type: 'multi_agent_message',
+                        message: message,
+                        conversation_history: conversationHistory
+                    }));
+                }
+                
+                setMessage('');
+            };
+            
+            // Auto-scroll to bottom when new messages arrive for each provider
+            useEffect(() => {
+                Object.keys(columnRefs.current).forEach(provider => {
+                    const ref = columnRefs.current[provider];
+                    if (ref && enabledProviders[provider]) {
+                        ref.scrollTop = ref.scrollHeight;
+                    }
+                });
+            }, [providerMessages, streamingMessages, enabledProviders]);
+            
+            const renderProviderColumn = (providerKey, displayName) => {
+                const messages = providerMessages[providerKey] || [];
+                const streamingContent = streamingMessages[providerKey];
+                const isProviderStreaming = isStreaming[providerKey];
+                const isAvailable = providerKey === 'integro' || availableProviders[providerKey] !== undefined;
+                
+                return (
+                    <div key={providerKey} className="flex flex-col bg-white rounded-lg shadow overflow-hidden h-full">
+                        <div className="bg-gray-50 px-4 py-3 border-b border-gray-200 flex-shrink-0">
+                            <h3 className="text-lg font-medium text-gray-900 flex items-center">
+                                <div className={`w-3 h-3 rounded-full mr-3 ${
+                                    isAvailable ? 'bg-green-500' : 'bg-red-500'
+                                }`}></div>
+                                {displayName}
+                            </h3>
+                            {!isAvailable && (
+                                <p className="text-sm text-red-600 mt-1">
+                                    API key not configured
+                                </p>
+                            )}
+                        </div>
+                        
+                        <div 
+                            ref={el => columnRefs.current[providerKey] = el}
+                            className="flex-1 overflow-y-auto p-4" 
+                            style={{minHeight: 0}}
+                        >
+                            {/* Show message history */}
+                            {messages.map((msg, idx) => (
+                                <div key={idx} className={`mb-4 ${
+                                    msg.type === 'user' ? 'text-right' : 'text-left'
+                                }`}>
+                                    {msg.type === 'user' ? (
+                                        <span className="inline-block bg-blue-600 text-white px-4 py-2 rounded-lg max-w-md">
+                                            {msg.content}
+                                        </span>
+                                    ) : (
+                                        <div className="inline-block bg-gray-100 px-4 py-2 rounded-lg max-w-md">
+                                            <div 
+                                                className="markdown-content"
+                                                dangerouslySetInnerHTML={{ 
+                                                    __html: parseMarkdown(msg.content) 
+                                                }}
+                                            />
+                                        </div>
+                                    )}
+                                </div>
+                            ))}
+                            
+                            {/* Show streaming message */}
+                            {isProviderStreaming && streamingContent && (
+                                <div className="mb-4 text-left fade-in">
+                                    <div className="inline-block bg-gray-100 px-4 py-2 rounded-lg max-w-md">
+                                        <div 
+                                            className="markdown-content"
+                                            dangerouslySetInnerHTML={{ 
+                                                __html: parseMarkdown(streamingContent) 
+                                            }}
+                                        />
+                                        <span className="inline-block ml-2 text-gray-500">
+                                            <i className="fas fa-circle-notch fa-spin text-xs"></i>
+                                        </span>
+                                    </div>
+                                </div>
+                            )}
+                            
+                            {/* Typing indicator when streaming but no content yet */}
+                            {isProviderStreaming && !streamingContent && (
+                                <div className="mb-4">
+                                    <div className="typing-indicator">
+                                        <span></span>
+                                        <span></span>
+                                        <span></span>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                );
+            };
+            
+            // Calculate grid columns based on enabled providers
+            const getGridColumns = () => {
+                const count = Object.values(enabledProviders).filter(Boolean).length;
+                if (count === 0) return 'grid-cols-1';
+                if (count === 1) return 'grid-cols-1';
+                if (count === 2) return 'lg:grid-cols-2';
+                if (count === 3) return 'lg:grid-cols-3';
+                return 'lg:grid-cols-4';
+            };
+            
+            const toggleProvider = (provider) => {
+                setEnabledProviders(prev => {
+                    const newState = {
+                        ...prev,
+                        [provider]: !prev[provider]
+                    };
+                    // Ensure at least one provider is always enabled
+                    const enabledCount = Object.values(newState).filter(Boolean).length;
+                    if (enabledCount === 0) {
+                        alert('At least one provider must be enabled');
+                        return prev;
+                    }
+                    return newState;
+                });
+            };
+            
+            return (
+                <div className="h-full flex flex-col">
+                    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 w-full flex-1 flex flex-col">
+                        {/* Header */}
+                        <div className="mb-6">
+                            <div className="flex items-center justify-between mb-2">
+                                <h1 className="text-2xl font-bold text-gray-900">AI Model Comparison</h1>
+                                
+                                {/* Provider Toggles */}
+                                <div className="flex items-center space-x-3">
+                                    <span className="text-sm text-gray-600 mr-2">Compare:</span>
+                                    <button
+                                        onClick={() => toggleProvider('integro')}
+                                        className={`px-3 py-1 rounded-full text-sm font-medium transition-all ${
+                                            enabledProviders.integro
+                                                ? 'bg-blue-100 text-blue-800 border-2 border-blue-300'
+                                                : 'bg-gray-100 text-gray-500 border-2 border-gray-200'
+                                        }`}
+                                    >
+                                        {enabledProviders.integro && (
+                                            <i className="fas fa-check-circle mr-1"></i>
+                                        )}
+                                        Integro
+                                    </button>
+                                    <button
+                                        onClick={() => toggleProvider('openai')}
+                                        className={`px-3 py-1 rounded-full text-sm font-medium transition-all ${
+                                            enabledProviders.openai
+                                                ? 'bg-green-100 text-green-800 border-2 border-green-300'
+                                                : 'bg-gray-100 text-gray-500 border-2 border-gray-200'
+                                        }`}
+                                    >
+                                        {enabledProviders.openai && (
+                                            <i className="fas fa-check-circle mr-1"></i>
+                                        )}
+                                        ChatGPT
+                                    </button>
+                                    <button
+                                        onClick={() => toggleProvider('anthropic')}
+                                        className={`px-3 py-1 rounded-full text-sm font-medium transition-all ${
+                                            enabledProviders.anthropic
+                                                ? 'bg-purple-100 text-purple-800 border-2 border-purple-300'
+                                                : 'bg-gray-100 text-gray-500 border-2 border-gray-200'
+                                        }`}
+                                    >
+                                        {enabledProviders.anthropic && (
+                                            <i className="fas fa-check-circle mr-1"></i>
+                                        )}
+                                        Claude
+                                    </button>
+                                    <button
+                                        onClick={() => toggleProvider('gemini')}
+                                        className={`px-3 py-1 rounded-full text-sm font-medium transition-all ${
+                                            enabledProviders.gemini
+                                                ? 'bg-yellow-100 text-yellow-800 border-2 border-yellow-300'
+                                                : 'bg-gray-100 text-gray-500 border-2 border-gray-200'
+                                        }`}
+                                    >
+                                        {enabledProviders.gemini && (
+                                            <i className="fas fa-check-circle mr-1"></i>
+                                        )}
+                                        Gemini
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <p className="text-gray-600">
+                                Toggle providers above to compare any combination of AI models side by side.
+                            </p>
+                            
+                            <div className="mt-4 flex items-center justify-between">
+                                <div className="flex items-center text-sm">
+                                    <div className={`w-2 h-2 rounded-full mr-2 ${isConnected ? 'bg-green-500' : 'bg-red-500'}`}></div>
+                                    <span className="text-gray-600">
+                                        {isConnected ? 'Connected' : 'Disconnected'}
+                                    </span>
+                                    <span className="ml-4 text-gray-500">
+                                        Comparing: {Object.values(enabledProviders).filter(Boolean).length} models
+                                    </span>
+                                    {agentLoaded && (
+                                        <span className="ml-4 bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-medium">
+                                            <i className="fas fa-robot mr-1"></i>
+                                            {loadedAgentName}
+                                            {loadedKBName && (
+                                                <span className="ml-1">
+                                                    + <i className="fas fa-book mr-1"></i>{loadedKBName}
+                                                </span>
+                                            )}
+                                        </span>
+                                    )}
+                                </div>
+                                
+                                {/* Integro Configuration - Agent Mode Only */}
+                                <div className="flex items-center space-x-3">
+                                    <label className="text-sm font-medium text-gray-700">Agent:</label>
+                                    <select
+                                        value={selectedAgent || ''}
+                                        onChange={(e) => setSelectedAgent(e.target.value)}
+                                        className="px-3 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                        disabled={!isConnected}
+                                    >
+                                        <option value="">Select Agent...</option>
+                                        {agents.map(agent => (
+                                            <option key={agent.id} value={agent.id}>
+                                                {agent.name}
+                                            </option>
+                                        ))}
+                                    </select>
+                                    
+                                    <label className="text-sm font-medium text-gray-700">KB:</label>
+                                    <select
+                                        value={selectedKB || ''}
+                                        onChange={(e) => setSelectedKB(e.target.value)}
+                                        className="px-3 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                        disabled={!isConnected}
+                                    >
+                                        <option value="">No KB</option>
+                                        {knowledgeBases.map(kb => (
+                                            <option key={kb.id} value={kb.id}>
+                                                {kb.name}
+                                            </option>
+                                        ))}
+                                    </select>
+                                    
+                                    <button
+                                        onClick={loadIntegroAgent}
+                                        disabled={!selectedAgent || !isConnected}
+                                        className="bg-blue-600 text-white px-3 py-1 rounded text-sm hover:bg-blue-700 transition-colors disabled:bg-gray-300"
+                                    >
+                                        Load Agent
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        
+                        {/* Input Section */}
+                        <div className="mb-6">
+                            <div className="flex space-x-3">
+                                <input
+                                    type="text"
+                                    value={message}
+                                    onChange={(e) => setMessage(e.target.value)}
+                                    onKeyPress={(e) => e.key === 'Enter' && sendMessage()}
+                                    placeholder={agentLoaded ? "Type your message to compare responses..." : "Load an agent first..."}
+                                    className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-lg"
+                                    disabled={!isConnected || !agentLoaded}
+                                />
+                                <button
+                                    onClick={sendMessage}
+                                    disabled={!isConnected || !message.trim() || !agentLoaded}
+                                    className="bg-blue-600 text-white px-8 py-3 rounded-lg hover:bg-blue-700 transition-colors disabled:bg-gray-300 text-lg font-medium"
+                                >
+                                    <i className="fas fa-paper-plane mr-2"></i>
+                                    Compare
+                                </button>
+                            </div>
+                        </div>
+                        
+                        {/* Response Columns */}
+                        <div className={`flex-1 grid grid-cols-1 ${getGridColumns()} gap-4 overflow-hidden`} style={{minHeight: 0}}>
+                            {enabledProviders.integro && renderProviderColumn('integro', 'Integro')}
+                            {enabledProviders.openai && renderProviderColumn('openai', 'OpenAI ChatGPT')}
+                            {enabledProviders.anthropic && renderProviderColumn('anthropic', 'Anthropic Claude')}
+                            {enabledProviders.gemini && renderProviderColumn('gemini', 'Google Gemini')}
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+        
+        // Main App Component
+        function App() {
+            const [currentPage, setCurrentPage] = useState('chat');
+            
+            const renderPage = () => {
+                switch(currentPage) {
+                    case 'agents':
+                        return <AgentManagement />;
+                    case 'knowledge':
+                        return <KnowledgeBaseManagement />;
+                    case 'compare':
+                        return <MultiAgentCompare />;
+                    case 'chat':
+                    default:
+                        return <ChatInterface />;
+                }
+            };
+            
+            return (
+                <div className="h-screen bg-gray-50 flex flex-col">
+                    <Navigation currentPage={currentPage} onPageChange={setCurrentPage} />
+                    <div className="fade-in flex-1" style={{minHeight: '0'}} key={currentPage}>
+                        {renderPage()}
+                    </div>
+                </div>
+            );
+        }
+        
+        // Render the app
+        ReactDOM.render(<App />, document.getElementById('root'));
+    </script>
+</body>
+</html>

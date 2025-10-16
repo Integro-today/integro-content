@@ -1,0 +1,109 @@
+services:
+  qdrant:
+    image: qdrant/qdrant:latest
+    container_name: integro_simulation_qdrant
+    ports:
+      - "6333:6333"
+    volumes:
+      - qdrant_data:/qdrant/storage
+  db:
+    image: postgres:16-alpine
+    container_name: integro_simulation_db
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-integro}
+      POSTGRES_USER: ${POSTGRES_USER:-integro}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-integro}
+    ports:
+      - "5432:5432"
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-integro}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build: .
+    container_name: integro_simulation_backend
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      PORT: 8888
+      API_PORT: 8888
+      FRONTEND_ORIGIN: ${FRONTEND_ORIGIN:-http://localhost:8889}
+      DATABASE_URL: ${DATABASE_URL:-postgresql://integro:integro@db:5432/integro}
+      QDRANT_URL: ${QDRANT_URL:-http://qdrant:6333}
+      QDRANT_HOST: ${QDRANT_HOST:-qdrant}
+      QDRANT_PORT: ${QDRANT_PORT:-6333}
+      # LLM API Keys
+      GROQ_API_KEY: ${GROQ_API_KEY}
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
+      # Voice service credentials
+      ASSEMBLYAI_API_KEY: ${ASSEMBLYAI_API_KEY}
+      ELEVENLABS_API_KEY: ${ELEVENLABS_API_KEY}
+      CARTESIA_API_KEY: ${CARTESIA_API_KEY}
+    command: sh -c "uvicorn integro.web_server:app --host 0.0.0.0 --port 8888 --workers 4 --reload"
+    ports:
+      - "8888:8888"
+    volumes:
+      - .:/app
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8888/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+
+  frontend:
+    image: node:20-alpine
+    container_name: integro_simulation_frontend
+    working_dir: /app
+    depends_on:
+      - backend
+    environment:
+      NEXT_PUBLIC_API_BASE_URL: ${NEXT_PUBLIC_API_BASE_URL:-http://localhost:8888}
+      NEXT_PUBLIC_LIVEKIT_URL: ${NEXT_PUBLIC_LIVEKIT_URL:-ws://localhost:7880}
+      PORT: 8889
+      HOSTNAME: 0.0.0.0
+    command: sh -c "npm install && npm run dev"
+    ports:
+      - "8889:8889"
+    volumes:
+      - ./frontend:/app
+
+  voice-agent:
+    build:
+      context: .
+      dockerfile: Dockerfile.voice
+    container_name: integro_simulation_voice_agent
+    depends_on:
+      - backend
+      - qdrant
+    environment:
+      # LiveKit Cloud credentials (replace with your actual credentials)
+      LIVEKIT_URL: ${LIVEKIT_URL:-wss://integro-srj80gdl.livekit.cloud}
+      LIVEKIT_API_KEY: ${LIVEKIT_API_KEY}
+      LIVEKIT_API_SECRET: ${LIVEKIT_API_SECRET}
+      # Voice service credentials
+      ASSEMBLYAI_API_KEY: ${ASSEMBLYAI_API_KEY}
+      ELEVENLABS_API_KEY: ${ELEVENLABS_API_KEY}
+      ELEVENLABS_VOICE_ID: ${ELEVENLABS_VOICE_ID:-21m00Tcm4TlvDq8ikWAM}
+      CARTESIA_API_KEY: ${CARTESIA_API_KEY}
+      CARTESIA_VOICE_ID: ${CARTESIA_VOICE_ID:-00a77add-48d5-4ef6-8157-71e5437b282d}
+      # Database connection
+      DATABASE_URL: ${DATABASE_URL:-postgresql://integro:integro@db:5432/integro}
+      QDRANT_URL: ${QDRANT_URL:-http://qdrant:6333}
+      # API settings
+      API_BASE_URL: http://backend:8888
+      DEFAULT_LLM_PROVIDER: ${DEFAULT_LLM_PROVIDER:-groq}
+      GROQ_API_KEY: ${GROQ_API_KEY}
+    volumes:
+      - ./integro:/app/integro
+      - ./scripts:/app/scripts
+    restart: unless-stopped
+
+volumes:
+  db_data:
+  qdrant_data:

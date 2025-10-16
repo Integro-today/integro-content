@@ -1,0 +1,19 @@
+/* SimpleMDE / EasyMDE header size overrides */
+.cm-s-easymde .cm-header-1 { font-size: 1.4rem; }
+.cm-s-easymde .cm-header-2 { font-size: 1.25rem; }
+.cm-s-easymde .cm-header-3 { font-size: 1.1rem; }
+.cm-s-easymde .cm-header-4 { font-size: 1rem; }
+.cm-s-easymde .cm-header-5 { font-size: 0.95rem; }
+.cm-s-easymde .cm-header-6 { font-size: 0.9rem; }
+
+/* Reduce extra spacing around headings inside editor */
+.cm-s-easymde .CodeMirror-lines h1,
+.cm-s-easymde .CodeMirror-lines h2,
+.cm-s-easymde .CodeMirror-lines h3,
+.cm-s-easymde .CodeMirror-lines h4,
+.cm-s-easymde .CodeMirror-lines h5,
+.cm-s-easymde .CodeMirror-lines h6 {
+  margin-top: 0.25rem;
+  margin-bottom: 0.25rem;
+}
+

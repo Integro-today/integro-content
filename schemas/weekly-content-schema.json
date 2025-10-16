@@ -1,0 +1,160 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Integro Weekly Content",
+  "description": "Schema for weekly content from Integro healing curriculum",
+  "type": "object",
+  "required": ["expedition", "week", "theme", "days"],
+  "properties": {
+    "expedition": {
+      "type": "object",
+      "required": ["number", "title"],
+      "properties": {
+        "number": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 3,
+          "description": "Expedition number (1-3)"
+        },
+        "title": {
+          "type": "string",
+          "description": "Expedition title",
+          "enum": [
+            "Healing the Self",
+            "Connection to Other (The Web of Connection)",
+            "Connection to Awe"
+          ]
+        }
+      }
+    },
+    "week": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 18,
+      "description": "Week number within the expedition"
+    },
+    "theme": {
+      "type": "string",
+      "description": "Weekly theme/lesson name (e.g., 'Roots of Healing')"
+    },
+    "days": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 7,
+      "items": {
+        "$ref": "#/definitions/day"
+      }
+    },
+    "metadata": {
+      "type": "object",
+      "properties": {
+        "source_file": {
+          "type": "string",
+          "description": "Original DOCX/PDF filename"
+        },
+        "last_updated": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "version": {
+          "type": "string"
+        }
+      }
+    }
+  },
+  "definitions": {
+    "day": {
+      "type": "object",
+      "required": ["day_number", "day_title", "summary", "daily_passage"],
+      "properties": {
+        "day_number": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 7
+        },
+        "day_title": {
+          "type": "string",
+          "description": "Title for the day's content"
+        },
+        "meme": {
+          "type": "object",
+          "description": "Placeholder for meme/image",
+          "properties": {
+            "url": {"type": "string", "format": "uri"},
+            "alt_text": {"type": "string"},
+            "caption": {"type": "string"}
+          }
+        },
+        "summary": {
+          "type": "string",
+          "description": "Brief 1-2 sentence summary of the day's content"
+        },
+        "daily_passage": {
+          "type": "string",
+          "description": "Main educational content (3-5 pages of text)"
+        },
+        "alternative_view": {
+          "type": "string",
+          "description": "Counterpoint or balanced perspective on the topic"
+        },
+        "activity": {
+          "type": "object",
+          "properties": {
+            "questions": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "Reflective questions for the user"
+            },
+            "instructions": {
+              "type": "string",
+              "description": "Additional instructions for activities"
+            }
+          }
+        },
+        "tools": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string",
+                "description": "Tool name (e.g., 'RAIN Meditation Tool', 'Values Exploration Tool')"
+              },
+              "description": {
+                "type": "string"
+              },
+              "reference_url": {
+                "type": "string",
+                "format": "uri"
+              }
+            }
+          },
+          "description": "Referenced tools or exercises"
+        },
+        "sources": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "author": {"type": "string"},
+              "year": {"type": "integer"},
+              "title": {"type": "string"},
+              "publisher": {"type": "string"},
+              "citation": {"type": "string"}
+            }
+          },
+          "description": "Bibliographic sources"
+        },
+        "domain": {
+          "type": "string",
+          "description": "Primary domain (e.g., 'Psychotherapeutic and Cognitive')"
+        },
+        "modality": {
+          "type": "string",
+          "description": "Therapeutic modality (e.g., 'Psychological and Therapeutic')"
+        }
+      }
+    }
+  }
+}

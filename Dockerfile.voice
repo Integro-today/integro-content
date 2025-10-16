@@ -1,0 +1,42 @@
+# Voice Agent Dockerfile
+# Multi-stage build: generate requirements.txt from pyproject.toml, then build app
+
+# Stage 1: Generate requirements.txt from pyproject.toml
+FROM python:3.11-slim AS requirements-builder
+
+WORKDIR /build
+
+# Install uv for dependency resolution
+RUN pip install --no-cache-dir uv
+
+# Copy only dependency files
+COPY pyproject.toml .
+
+# Generate requirements.txt with voice extras
+RUN uv pip compile pyproject.toml --extra voice -o requirements.txt
+
+# Stage 2: Build the voice agent
+FROM python:3.11-slim
+
+WORKDIR /app
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    gcc \
+    g++ \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy auto-generated requirements from builder stage
+COPY --from=requirements-builder /build/requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy the entire integro package and scripts
+COPY integro/ ./integro/
+COPY scripts/ ./scripts/
+
+# Set environment variables for LiveKit agent
+ENV PYTHONUNBUFFERED=1
+ENV TOKENIZERS_PARALLELISM=false
+
+# Run the voice agent in development mode
+CMD ["python", "scripts/run_voice_agent.py", "dev"]

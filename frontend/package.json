@@ -1,0 +1,31 @@
+{
+  "name": "integro-frontend",
+  "private": true,
+  "version": "0.1.0",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start -p 8889 -H 0.0.0.0"
+  },
+  "dependencies": {
+    "@emotion/react": "^11.11.4",
+    "@emotion/styled": "^11.11.5",
+    "@livekit/components-react": "^2.9.14",
+    "@mantine/core": "^7.14.2",
+    "@mantine/hooks": "^7.14.2",
+    "@mantine/notifications": "^7.17.8",
+    "@tabler/icons-react": "^2.47.0",
+    "easymde": "^2.18.0",
+    "livekit-client": "^2.0.0",
+    "marked": "^12.0.2",
+    "next": "14.2.6",
+    "react": "18.2.0",
+    "react-dom": "18.2.0",
+    "react-simplemde-editor": "^5.2.0"
+  },
+  "devDependencies": {
+    "@types/node": "24.3.1",
+    "@types/react": "19.1.12",
+    "typescript": "5.9.2"
+  }
+}
