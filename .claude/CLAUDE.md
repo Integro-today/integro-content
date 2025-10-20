@@ -72,10 +72,34 @@ Every simulation automatically creates:
 **Workflow Agents:**
 - Intentions Workflow 1-8 (Tegra voice variations for intention-setting)
 
-**Persona Agents (Production-Ready):**
-- **Paul Persona 4 (v2.1)**: Military veteran (Air Force pilot), PTSD symptoms, terse communication (1-2 sentences), defensive/resistant, preparing for ayahuasca at Heroic Hearts
-- **Ellen Persona 4 (v2.1)**: Tech entrepreneur, achievement addiction, verbose/analytical communication (4-6+ sentences), spiritually seeking, preparing for ibogaine at Beond
-- **Jamie Persona 1 (v2.1)**: ADHD creative (graphic designer), scattered/enthusiastic communication (2-5 sentences jumping topics), recently diagnosed, preparing for psilocybin in Oregon
+**Persona Agents (Production-Ready - 12 Total):**
+
+**Original Benchmark Personas (3):**
+- **Paul Persona 4**: Military veteran (Air Force pilot), PTSD, terse (1-2 sent), defensive/resistant → Tests trust-building through resistance
+- **Ellen Persona 4**: Tech entrepreneur, achievement addiction, verbose (4-6+ sent), analytical → Tests helping users drop from head to heart
+- **Jamie Persona 1**: ADHD creative (graphic designer), scattered (2-5 sent), enthusiastic → Tests providing structure for executive dysfunction
+
+**New Diverse Personas (10) - Generated 2025-10-16:**
+- **Vanessa Chen**: Hyper-Detailed Rambler, Chinese-American UX researcher, extremely verbose (8-12+ sent) → Tests patience with extensive detail, gentle redirection
+- **Tommy Nguyen**: Confused Instruction Follower, Vietnamese refugee restaurant owner, misunderstands constantly → Tests clear simple instructions, recognizing false agreement
+- **Valentina Rossi**: Drama Queen, Cuban-Italian real estate agent, ALL CAPS dramatic (4-8+ sent) → Tests staying grounded with heightened emotions, distinguishing crisis from performance
+- **Sam Morrison**: Suicidal Crisis, non-binary former teacher, passive ideation → Tests crisis protocols, suicide risk recognition, appropriate resource provision
+- **Diego Fuentes**: Tangent Master, Mexican-American filmmaker, every answer becomes story → Tests following tangents with curiosity, finding emotional thread
+- **Dr. Rebecca Goldstein**: Know-It-All, Jewish psychologist, intellectualizes everything (3-5 sent) → Tests navigating "I already know" resistance, inviting embodiment
+- **Maria Rodriguez**: Absolute Novice, Mexican-American teaching assistant, overwhelmed beginner → Tests explaining at beginner level without condescension
+- **Aisha Patel**: Integration Expert, Indian-American yoga teacher, spiritual bypassing (4-7 sent) → Tests catching sophisticated avoidance, working with experienced users
+- **Kyle Braddock**: Drug-Focused, white software engineer, pharmacology-obsessed (3-5 sent) → Tests redirecting substance focus to psychological prep, setting boundaries
+- **Bobby Sullivan**: Prejudiced/Biased, Irish-Catholic coal miner, trauma-based bias (2-4 sent) → Tests maintaining boundaries with biased views, redirecting to underlying pain
+- **Chloe Park**: Manipulative/Antisocial, Korean-American publicist, narcissistic traits (3-5 sent) → Tests maintaining boundaries with manipulation, not getting pulled into enabling
+- **Jack Kowalski**: Violence Risk, Polish-American veteran, intrusive violent thoughts (1-3 sent) → Tests violence risk protocols, crisis resource provision, safety boundaries
+
+**Diversity Coverage:**
+- Gender: Women (6), Men (5), Non-binary (1)
+- Ethnicity: Chinese, Vietnamese, Cuban-Italian, White (various), Mexican, Jewish, Indian, Korean, Polish
+- Age: 28-58 years
+- Geography: West Coast, East Coast, Southwest, Midwest, South
+- Class: Working-class to professional
+- Psychedelic Experience: Zero to expert (12+ years)
 
 **Persona System Architecture (v2.1):**
 
@@ -151,6 +175,38 @@ The persona system creates **benchmark-quality synthetic humans** for agent test
 6. Extract runtime header (YAML) and character prompt
 7. Test in simulation and validate against checklist
 8. Iterate based on outputs (adjust voice, add corrections)
+
+**⚠️ Persona Generator Lessons Learned (2025-10-16):**
+
+During the 2025-10-16 persona generation session, we discovered **critical flaws** in using the persona-generator subagent without sufficient context:
+
+**Problem Identified:**
+- Initial generation created multiple personas with the **same name** ("Marcus DeAngelo" repeatedly)
+- **All personas were African American** despite requesting diverse archetypes
+- Lacked diversity across ethnicity, gender, geography, and class
+- This is problematic and not representative for testing purposes
+
+**Root Cause:**
+The persona-generator subagent, when given only archetype descriptions (e.g., "Drama Queen", "Know-It-All") without detailed demographic seeds, defaulted to similar demographic patterns and didn't ensure diversity.
+
+**Solution Implemented:**
+Created comprehensive `PERSONA_REFERENCE_GUIDE.md` with detailed seed information for each persona including:
+- Specific names, ages, pronouns
+- Detailed ethnicity, location, occupation
+- Family background, education, relationships
+- Cultural markers and regional dialects
+- Psychological frameworks and communication patterns
+
+**Future Requirements:**
+- ✅ **ALWAYS use detailed seed prompts** from `PERSONA_REFERENCE_GUIDE.md`
+- ✅ **Specify exact demographics** (name, ethnicity, location, age) in seed
+- ✅ **Include cultural markers** and regional characteristics
+- ⚠️ **OR modify persona-generator subagent** to ensure diversity automatically
+- ⚠️ **Validate output diversity** before accepting generated personas
+
+**Reference Files:**
+- `Agents/personas/PERSONA_REFERENCE_GUIDE.md` - Detailed seeds for all 12 personas
+- `Agents/personas/persona_seed_list.md` - Quick reference for future generation
 
 ### Performance Metrics
 
@@ -277,13 +333,26 @@ integro-content/
 ├── .claude/CLAUDE.md                    # This file
 ├── Agents/
 │   ├── batch_simulations/               # Simulation outputs (JSON + MD)
-│   ├── personas/                        # Persona definitions & research
-│   │   ├── BASE_PERSONA_TEMPLATE_v2.1.md        # Production template
-│   │   ├── synthetic_personas.md                # Persona creation guide
-│   │   ├── Best Practices for Designing Synthetic Personas in Chat Simulations.pdf  # Research
-│   │   ├── Paul Persona 4.md                    # Military veteran (v2.1)
-│   │   ├── Ellen Persona 4.md                   # Tech entrepreneur (v2.1)
-│   │   └── Jamie Persona 1.md                   # ADHD creative (v2.1)
+│   ├── personas/                        # Persona definitions & research (12 total)
+│   │   ├── BASE_PERSONA_TEMPLATE_v2.1.md                        # Production template
+│   │   ├── PERSONA_REFERENCE_GUIDE.md                           # Detailed seeds for all personas
+│   │   ├── persona_seed_list.md                                 # Quick reference for generation
+│   │   ├── synthetic_personas.md                                # Persona creation guide
+│   │   ├── Best Practices for Designing Synthetic Personas.pdf  # Research
+│   │   ├── Paul_Persona_4.md                                    # Military veteran (terse/defensive)
+│   │   ├── Ellen_Persona_4.md                                   # Tech entrepreneur (verbose/analytical)
+│   │   ├── Jamie_Persona_1.md                                   # ADHD creative (scattered/enthusiastic)
+│   │   ├── Hyper_Detailed_Rambler_Persona_1.md                  # Vanessa Chen (extremely verbose)
+│   │   ├── Tommy_Nguyen_Confused_Instruction_Follower_Persona_1.md  # Vietnamese refugee
+│   │   ├── Valentina_Rossi_Drama_Queen_Persona_1.md             # Cuban-Italian dramatic
+│   │   ├── Sam_Morrison_Suicidal_Crisis_Persona_1.md            # Non-binary crisis
+│   │   ├── Diego_Fuentes_Tangent_Master_Persona_1.md            # Mexican-American tangential
+│   │   ├── Dr_Rebecca_Goldstein_Know_It_All_Persona_1.md        # Jewish psychologist
+│   │   ├── Aisha_Patel_Integration_Expert_Persona_1.md          # Indian-American spiritual bypassing
+│   │   ├── Kyle_Braddock_Drug_Focused_Persona_1.md              # White software engineer
+│   │   ├── Bobby_Sullivan_Prejudiced_Persona_1.md               # Irish-Catholic coal miner
+│   │   ├── Chloe_Park_Manipulative_Persona_1.md                 # Korean-American narcissistic
+│   │   └── Jack_Kowalski_Violence_Risk_Persona_1.md             # Polish-American veteran
 │   └── intentions_workflow_8.md         # Latest workflow agent
 ├── FINAL INTEGRO CONTENT/               # 54 weeks of curriculum
 │   ├── Expedition 1_ Healing the Self/
@@ -345,24 +414,28 @@ docker exec integro_simulation_backend python test_mixed_persona_batch.py
 **Persona Development (v2.1 System Active):**
 - [x] Base template v2.1 with runtime headers, drift, fatigue modulation
 - [x] Three benchmark personas: Paul (resistant/terse), Ellen (intellectual/verbose), Jamie (ADHD/scattered)
-- [ ] Create 5-10 additional diverse personas using v2.1 template:
-  - Drama Queen/King (theatrical, everything is intensified)
-  - Belligerent/Hostile (openly resistant, challenges everything)
-  - Quiet/Reserved (minimal responses, needs drawing out)
-  - Hyper-Detailed Rambler (verbose to extreme, loses thread)
-  - Bad at Following Instructions (earnest but confused)
-  - Crisis/Suicidal (safety protocol testing)
-  - Know-It-All (jumps to answers, resists process)
-  - Integration Expert (sophisticated but may bypass)
-  - Tangent Master (never answers directly)
-  - Novice (overwhelmed, needs hand-holding)
-- [ ] Validate all personas against v2.1 checklist
-- [ ] Run cross-persona comparison testing (ensure distinctive voices)
-- [ ] Build persona library documentation
+- [x] Created 10 additional diverse personas (2025-10-16):
+  - [x] Hyper-Detailed Rambler (Vanessa Chen - Chinese-American UX researcher)
+  - [x] Confused Instruction Follower (Tommy Nguyen - Vietnamese refugee)
+  - [x] Drama Queen (Valentina Rossi - Cuban-Italian real estate agent)
+  - [x] Suicidal Crisis (Sam Morrison - non-binary former teacher)
+  - [x] Tangent Master (Diego Fuentes - Mexican-American filmmaker)
+  - [x] Know-It-All (Dr. Rebecca Goldstein - Jewish psychologist)
+  - [x] Absolute Novice (Maria Rodriguez - Mexican-American teaching assistant)
+  - [x] Integration Expert (Aisha Patel - Indian-American yoga teacher)
+  - [x] Drug-Focused (Kyle Braddock - white software engineer)
+  - [x] Prejudiced/Biased (Bobby Sullivan - Irish-Catholic coal miner)
+  - [x] Manipulative/Antisocial (Chloe Park - Korean-American publicist)
+  - [x] Violence Risk (Jack Kowalski - Polish-American veteran)
+- [x] Built persona library documentation (PERSONA_REFERENCE_GUIDE.md)
+- [ ] Validate all 12 personas in actual simulations
+- [ ] Run cross-persona comparison testing (ensure distinctive voices in practice)
+- [ ] Create YAML configs for new personas to import into database
+- [ ] Improve persona-generator subagent to ensure diversity automatically
 
 ---
 
 **Repository**: https://github.com/Integro-today/integro-content
 **Last Updated**: 2025-10-16
 **Status**: Production simulation system active with 100+ successful test runs
-**Persona System**: v2.1 benchmark-quality template with 3 production personas (Paul, Ellen, Jamie)
+**Persona System**: v2.1 benchmark-quality template with **12 production personas** covering diverse demographics and therapeutic challenges (Paul, Ellen, Jamie + 9 new personas generated 2025-10-16)
