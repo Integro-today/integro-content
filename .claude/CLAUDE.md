@@ -51,10 +51,11 @@ A **high-performance testing framework** for evaluating therapeutic agents throu
 
 | Script | Purpose | Performance | Output |
 |--------|---------|-------------|--------|
-| `test_two_agent_simulation.py` | Single simulation (debug) | ~60s | 1 conversation |
+| `test_two_agent_simulation.py` | Single simulation with CLI args | ~60s | 1 conversation |
 | `test_batch_simulations.py` | Sequential batch | ~60s/sim | N conversations |
 | `test_async_batch_simulations.py` | Parallel async batch | ~8-12s/sim | N conversations (5x faster) |
-| `test_mixed_persona_batch.py` | Multi-persona testing | ~5-6s/sim | 10 Paul + 10 Ellen |
+| `test_mixed_persona_batch.py` | Multi-persona testing | ~5-6s/sim | Multiple personas |
+| `test_roots_healing_batch.py` | Test Roots of Healing vs all personas | ~15-20min | 13 conversations |
 
 **Rate Limiting (Groq API):**
 - Model: `moonshotai/kimi-k2-instruct-0905`
@@ -70,28 +71,27 @@ Every simulation automatically creates:
 ### Current Agents
 
 **Workflow Agents:**
-- Intentions Workflow 1-8 (Tegra voice variations for intention-setting)
+- **Intentions Workflow 1-8** (`intentions_workflow_8`) - Tegra voice for pre-journey intention-setting
+- **Roots of Healing Workflow 1** (`roots_of_healing_-_day_1_workflow_1`) - Tegra voice for daily curriculum (Week 1, Day 1)
 
-**Persona Agents (Production-Ready - 12 Total):**
+**Persona Agents (Production-Ready - 13 Total):**
 
 **Original Benchmark Personas (3):**
-- **Paul Persona 4**: Military veteran (Air Force pilot), PTSD, terse (1-2 sent), defensive/resistant → Tests trust-building through resistance
-- **Ellen Persona 4**: Tech entrepreneur, achievement addiction, verbose (4-6+ sent), analytical → Tests helping users drop from head to heart
-- **Jamie Persona 1**: ADHD creative (graphic designer), scattered (2-5 sent), enthusiastic → Tests providing structure for executive dysfunction
+- **Paul Persona 4** (`paul_persona_4`): Military veteran (Air Force pilot), PTSD, terse (1-2 sent), defensive/resistant → Tests trust-building through resistance
+- **Ellen Persona 4** (`ellen_persona_4`): Tech entrepreneur, achievement addiction, verbose (4-6+ sent), analytical → Tests helping users drop from head to heart
+- **Jamie Persona 2** (`jamie_adhd_persona_2`): ADHD creative (graphic designer), scattered (2-5 sent), enthusiastic → Tests providing structure for executive dysfunction
 
 **New Diverse Personas (10) - Generated 2025-10-16:**
-- **Vanessa Chen**: Hyper-Detailed Rambler, Chinese-American UX researcher, extremely verbose (8-12+ sent) → Tests patience with extensive detail, gentle redirection
-- **Tommy Nguyen**: Confused Instruction Follower, Vietnamese refugee restaurant owner, misunderstands constantly → Tests clear simple instructions, recognizing false agreement
-- **Valentina Rossi**: Drama Queen, Cuban-Italian real estate agent, ALL CAPS dramatic (4-8+ sent) → Tests staying grounded with heightened emotions, distinguishing crisis from performance
-- **Sam Morrison**: Suicidal Crisis, non-binary former teacher, passive ideation → Tests crisis protocols, suicide risk recognition, appropriate resource provision
-- **Diego Fuentes**: Tangent Master, Mexican-American filmmaker, every answer becomes story → Tests following tangents with curiosity, finding emotional thread
-- **Dr. Rebecca Goldstein**: Know-It-All, Jewish psychologist, intellectualizes everything (3-5 sent) → Tests navigating "I already know" resistance, inviting embodiment
-- **Maria Rodriguez**: Absolute Novice, Mexican-American teaching assistant, overwhelmed beginner → Tests explaining at beginner level without condescension
-- **Aisha Patel**: Integration Expert, Indian-American yoga teacher, spiritual bypassing (4-7 sent) → Tests catching sophisticated avoidance, working with experienced users
-- **Kyle Braddock**: Drug-Focused, white software engineer, pharmacology-obsessed (3-5 sent) → Tests redirecting substance focus to psychological prep, setting boundaries
-- **Bobby Sullivan**: Prejudiced/Biased, Irish-Catholic coal miner, trauma-based bias (2-4 sent) → Tests maintaining boundaries with biased views, redirecting to underlying pain
-- **Chloe Park**: Manipulative/Antisocial, Korean-American publicist, narcissistic traits (3-5 sent) → Tests maintaining boundaries with manipulation, not getting pulled into enabling
-- **Jack Kowalski**: Violence Risk, Polish-American veteran, intrusive violent thoughts (1-3 sent) → Tests violence risk protocols, crisis resource provision, safety boundaries
+- **Tommy Nguyen** (`tommy_confused_instruction_follower_persona_1`): Confused Instruction Follower, Vietnamese refugee restaurant owner, misunderstands constantly → Tests clear simple instructions, recognizing false agreement
+- **Valentina Rossi** (`valentina_drama_queen_persona_1`): Drama Queen, Cuban-Italian real estate agent, ALL CAPS dramatic (4-8+ sent) → Tests staying grounded with heightened emotions, distinguishing crisis from performance
+- **Sam Morrison** (`sam_crisis_persona_1`): Suicidal Crisis, non-binary former teacher, passive ideation → Tests crisis protocols, suicide risk recognition, appropriate resource provision
+- **Diego Fuentes** (`diego_tangent_master_persona_1`): Tangent Master, Mexican-American filmmaker, every answer becomes story → Tests following tangents with curiosity, finding emotional thread
+- **Dr. Rebecca Goldstein** (`dr._rebecca_goldstein_know-it-all_persona_1`): Know-It-All, Jewish psychologist, intellectualizes everything (3-5 sent) → Tests navigating "I already know" resistance, inviting embodiment
+- **Aisha Patel** (`aisha_integration_expert_persona_1`): Integration Expert, Indian-American yoga teacher, spiritual bypassing (4-7 sent) → Tests catching sophisticated avoidance, working with experienced users
+- **Kyle Braddock** (`kyle_drug-focused_persona_1`): Drug-Focused, white software engineer, pharmacology-obsessed (3-5 sent) → Tests redirecting substance focus to psychological prep, setting boundaries
+- **Bobby Sullivan** (`bobby_prejudiced_persona_1`): Prejudiced/Biased, Irish-Catholic coal miner, trauma-based bias (2-4 sent) → Tests maintaining boundaries with biased views, redirecting to underlying pain
+- **Chloe Park** (`chloe_manipulative_persona_1`): Manipulative/Antisocial, Korean-American publicist, narcissistic traits (3-5 sent) → Tests maintaining boundaries with manipulation, not getting pulled into enabling
+- **Jack Kowalski** (`jack_violence_risk_persona_1`): Violence Risk, Polish-American veteran, intrusive violent thoughts (1-3 sent) → Tests violence risk protocols, crisis resource provision, safety boundaries
 
 **Diversity Coverage:**
 - Gender: Women (6), Men (5), Non-binary (1)
@@ -231,27 +231,60 @@ Created comprehensive `PERSONA_REFERENCE_GUIDE.md` with detailed seed informatio
 
 ### Running Simulations
 
+#### Single Simulation (with CLI Arguments)
+
 ```bash
-# Quick test (4 simulations)
+# Test specific workflow vs specific persona
+docker exec integro_simulation_backend python test_two_agent_simulation.py \
+    --workflow-id roots_of_healing_-_day_1_workflow_1 \
+    --persona-id ellen_persona_4 \
+    --max-rounds 20 \
+    --output Agents/test_simulations/roots_ellen_test.json
+
+# Quick test with different persona
+docker exec integro_simulation_backend python test_two_agent_simulation.py \
+    --workflow-id intentions_workflow_8 \
+    --persona-id paul_persona_4 \
+    --max-rounds 20 \
+    --output Agents/test_simulations/intentions_paul_test.json
+```
+
+**Conversation Flow (Daily Curriculum):**
+1. Persona initiates conversation (requests daily content)
+2. Workflow responds with grounding/consent
+3. Interactive path (reflection questions) OR reading path (full passage)
+4. Artifact creation (YAML to dashboard)
+5. Closing
+
+#### Batch Testing
+
+```bash
+# Test Roots of Healing against all 13 personas
+docker exec integro_simulation_backend python test_roots_healing_batch.py
+
+# Test intentions workflow (legacy)
 docker exec integro_simulation_backend python test_mixed_persona_batch.py
 
-# Full batch (20 simulations: 10 Paul + 10 Ellen with Workflow 8)
-# Configured in main() function: simulations_per_persona=10, max_concurrent=10
-docker exec integro_simulation_backend python test_mixed_persona_batch.py
-
-# Convert simulation to markdown
+# Convert simulation to markdown (auto-generated during batch runs)
 docker exec integro_simulation_backend python convert_simulation_to_markdown.py <simulation.json>
 ```
 
 **Output Structure:**
 ```
-Agents/batch_simulations/mixed_batch_YYYYMMDD_HHMMSS/
-├── paul_simulation_01.json + paul_simulation_01.md
-├── paul_simulation_02.json + paul_simulation_02.md
-├── ... (10 Paul conversations)
-├── ellen_simulation_01.json + ellen_simulation_01.md
-├── ellen_simulation_02.json + ellen_simulation_02.md
-└── ... (10 Ellen conversations)
+Agents/batch_simulations/roots_healing_all_personas_YYYYMMDD_HHMMSS/
+├── paul_persona_4_simulation_01.json + .md
+├── ellen_persona_4_simulation_01.json + .md
+├── jamie_adhd_persona_2_simulation_01.json + .md
+├── tommy_confused_instruction_follower_persona_1_simulation_01.json + .md
+├── valentina_drama_queen_persona_1_simulation_01.json + .md
+├── sam_crisis_persona_1_simulation_01.json + .md
+├── diego_tangent_master_persona_1_simulation_01.json + .md
+├── dr._rebecca_goldstein_know-it-all_persona_1_simulation_01.json + .md
+├── aisha_integration_expert_persona_1_simulation_01.json + .md
+├── kyle_drug-focused_persona_1_simulation_01.json + .md
+├── bobby_prejudiced_persona_1_simulation_01.json + .md
+├── chloe_manipulative_persona_1_simulation_01.json + .md
+└── jack_violence_risk_persona_1_simulation_01.json + .md
 ```
 
 ### Integration with Agent Lab
@@ -268,8 +301,21 @@ Uses production infrastructure:
 
 ### Simulation Tools
 
-**`test_mixed_persona_batch.py`** - Primary batch testing tool
-- Tests workflow agents against multiple personas simultaneously
+**`test_two_agent_simulation.py`** - Single simulation with CLI arguments
+- Test specific workflow vs specific persona
+- Command-line arguments: `--workflow-id`, `--persona-id`, `--max-rounds`, `--output`
+- Persona initiates conversation (daily curriculum flow)
+- Auto-generates JSON + Markdown
+- ~60s per simulation
+
+**`test_roots_healing_batch.py`** - Daily curriculum batch testing
+- Tests Roots of Healing Workflow 1 against all 13 personas
+- Built-in RateLimiter for Groq API (250K TPM management)
+- Auto-generates JSON + Markdown for every simulation
+- 5 concurrent simulations, ~15-20 minutes total
+
+**`test_mixed_persona_batch.py`** - Legacy batch testing tool
+- Tests intentions workflow against multiple personas simultaneously
 - Built-in RateLimiter for Groq API (250K TPM management)
 - Auto-generates JSON + Markdown for every simulation
 - Configurable concurrency and batch size
@@ -285,6 +331,11 @@ Uses production infrastructure:
 - Automatic wait when approaching TPM limits
 - 85% safety margin on published limits
 - Prevents all rate limit errors
+
+**`create_agent_from_md.py`** - Agent creation from markdown
+- Creates workflow or persona agents from markdown files
+- Stores in PostgreSQL database
+- Usage: `python create_agent_from_md.py <file.md> --type [workflow|persona]`
 
 ### Development Tools
 
@@ -333,7 +384,7 @@ integro-content/
 ├── .claude/CLAUDE.md                    # This file
 ├── Agents/
 │   ├── batch_simulations/               # Simulation outputs (JSON + MD)
-│   ├── personas/                        # Persona definitions & research (12 total)
+│   ├── personas/                        # Persona definitions & research (13 total)
 │   │   ├── BASE_PERSONA_TEMPLATE_v2.1.md                        # Production template
 │   │   ├── PERSONA_REFERENCE_GUIDE.md                           # Detailed seeds for all personas
 │   │   ├── persona_seed_list.md                                 # Quick reference for generation
@@ -341,8 +392,7 @@ integro-content/
 │   │   ├── Best Practices for Designing Synthetic Personas.pdf  # Research
 │   │   ├── Paul_Persona_4.md                                    # Military veteran (terse/defensive)
 │   │   ├── Ellen_Persona_4.md                                   # Tech entrepreneur (verbose/analytical)
-│   │   ├── Jamie_Persona_1.md                                   # ADHD creative (scattered/enthusiastic)
-│   │   ├── Hyper_Detailed_Rambler_Persona_1.md                  # Vanessa Chen (extremely verbose)
+│   │   ├── Jamie_Chen_ADHD_Persona_1.md                         # ADHD creative (scattered/enthusiastic)
 │   │   ├── Tommy_Nguyen_Confused_Instruction_Follower_Persona_1.md  # Vietnamese refugee
 │   │   ├── Valentina_Rossi_Drama_Queen_Persona_1.md             # Cuban-Italian dramatic
 │   │   ├── Sam_Morrison_Suicidal_Crisis_Persona_1.md            # Non-binary crisis
@@ -353,7 +403,10 @@ integro-content/
 │   │   ├── Bobby_Sullivan_Prejudiced_Persona_1.md               # Irish-Catholic coal miner
 │   │   ├── Chloe_Park_Manipulative_Persona_1.md                 # Korean-American narcissistic
 │   │   └── Jack_Kowalski_Violence_Risk_Persona_1.md             # Polish-American veteran
-│   └── intentions_workflow_8.md         # Latest workflow agent
+│   ├── intentions_workflow_8.md         # Pre-journey intention-setting (Tegra)
+│   ├── roots_of_healing_workflow_1.md   # Daily curriculum Week 1 Day 1 (Tegra)
+│   ├── tegra_voice.md                   # Tegra voice card & guidelines
+│   └── tegra_guidelines.md              # Tegra conversation arc guidelines
 ├── FINAL INTEGRO CONTENT/               # 54 weeks of curriculum
 │   ├── Expedition 1_ Healing the Self/
 │   ├── Expedition 2_ Connection to Other/
@@ -366,8 +419,17 @@ integro-content/
 │   └── web_server.py                    # FastAPI application
 ├── frontend/                            # Next.js UI
 ├── schemas/weekly-content-schema.json   # Content structure
-├── test_mixed_persona_batch.py          # Primary simulation tool
+├── scripts/
+│   ├── create_all_agents.sh             # Create all workflow + persona agents
+│   ├── examine_week1_day1.py            # Parse DOCX curriculum content
+│   └── output/                          # Content extraction outputs
+├── test_two_agent_simulation.py         # Single simulation with CLI args
+├── test_roots_healing_batch.py          # Daily curriculum batch test
+├── test_mixed_persona_batch.py          # Intentions workflow batch test
+├── test_async_batch_simulations.py      # Async batch testing
 ├── convert_simulation_to_markdown.py    # MD conversion tool
+├── create_agent_from_md.py              # Create agents from markdown
+├── python-docx_mapping.md               # API reference for parsing DOCX
 ├── docker-compose.yaml                  # Local dev stack
 ├── pyproject.toml                       # Python dependencies
 └── Makefile                             # Dev commands
@@ -386,11 +448,19 @@ make docker-build && make docker-up
 # - Frontend: http://localhost:8889
 # - Qdrant: http://localhost:6333
 
-# 3. Run simulation test
-docker exec integro_simulation_backend python test_mixed_persona_batch.py
+# 3. Run single simulation test
+docker exec integro_simulation_backend python test_two_agent_simulation.py \
+    --workflow-id roots_of_healing_-_day_1_workflow_1 \
+    --persona-id ellen_persona_4 \
+    --max-rounds 20 \
+    --output Agents/test_simulations/roots_ellen_test.json
 
-# 4. Review outputs
-# Check Agents/batch_simulations/mixed_batch_YYYYMMDD_HHMMSS/
+# 4. Or run full batch test (all 13 personas)
+docker exec integro_simulation_backend python test_roots_healing_batch.py
+
+# 5. Review outputs
+# Single: Agents/test_simulations/roots_ellen_test.json + .md
+# Batch: Agents/batch_simulations/roots_healing_all_personas_YYYYMMDD_HHMMSS/
 # - *.json for machine processing
 # - *.md for human review
 ```
@@ -428,14 +498,27 @@ docker exec integro_simulation_backend python test_mixed_persona_batch.py
   - [x] Manipulative/Antisocial (Chloe Park - Korean-American publicist)
   - [x] Violence Risk (Jack Kowalski - Polish-American veteran)
 - [x] Built persona library documentation (PERSONA_REFERENCE_GUIDE.md)
-- [ ] Validate all 12 personas in actual simulations
+- [x] All 13 personas uploaded to database (2025-10-20)
+- [x] Created Roots of Healing Workflow 1 - Daily curriculum Week 1 Day 1 (2025-10-20)
+- [x] Updated test_two_agent_simulation.py with CLI arguments (2025-10-20)
+- [x] Created test_roots_healing_batch.py for full persona testing (2025-10-20)
+- [x] Built python-docx API mapping for DOCX parsing (2025-10-20)
+- [x] Aligned Roots of Healing workflow with Tegra voice (direct, grounded, no stage directions) (2025-10-20)
+- [ ] Validate all 13 personas in actual simulations
 - [ ] Run cross-persona comparison testing (ensure distinctive voices in practice)
-- [ ] Create YAML configs for new personas to import into database
 - [ ] Improve persona-generator subagent to ensure diversity automatically
+
+**Daily Curriculum Development:**
+- [x] Parsed Week 1 Day 1 content from DOCX (2025-10-20)
+- [x] Created workflow structure with Option A (reflection) and Option B (reading) paths (2025-10-20)
+- [x] Tested workflow with Ellen Persona 4 - successful therapeutic depth achieved (2025-10-20)
+- [ ] Create workflows for remaining 377 days of curriculum
+- [ ] Build workflow templates for different activity types
 
 ---
 
 **Repository**: https://github.com/Integro-today/integro-content
-**Last Updated**: 2025-10-16
-**Status**: Production simulation system active with 100+ successful test runs
-**Persona System**: v2.1 benchmark-quality template with **12 production personas** covering diverse demographics and therapeutic challenges (Paul, Ellen, Jamie + 9 new personas generated 2025-10-16)
+**Last Updated**: 2025-10-20
+**Status**: Production simulation system active with 100+ successful test runs. Daily curriculum workflow system launched.
+**Persona System**: v2.1 benchmark-quality template with **13 production personas** covering diverse demographics and therapeutic challenges
+**Workflow Agents**: 2 production agents (Intentions Workflow 8, Roots of Healing Workflow 1)

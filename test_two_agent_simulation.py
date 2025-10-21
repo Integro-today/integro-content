@@ -223,6 +223,15 @@ async def list_available_agents(storage: ConfigStorage):
 
 async def main():
     """Main test function."""
+    import argparse
+
+    parser = argparse.ArgumentParser(description="Run a two-agent simulation")
+    parser.add_argument("--workflow-id", type=str, help="ID of workflow agent")
+    parser.add_argument("--persona-id", type=str, help="ID of persona agent")
+    parser.add_argument("--max-rounds", type=int, default=20, help="Number of conversation rounds")
+    parser.add_argument("--output", type=str, help="Output file path")
+    args = parser.parse_args()
+
     print("\n" + "="*60)
     print("TWO-AGENT SIMULATION TEST")
     print("="*60)
@@ -239,35 +248,56 @@ async def main():
         print("Please create agents using the web interface or API first")
         return
 
-    # Look for specific agents mentioned by user
-    # "Paul Persona 3" and "Intentions Workflow 2"
-    system_agent_id = None
-    user_agent_id = None
+    # Use command line args if provided
+    workflow_agent_id = args.workflow_id if args.workflow_id else None
+    persona_agent_id = args.persona_id if args.persona_id else None
+    max_rounds = args.max_rounds
+    output_path = Path(args.output) if args.output else None
 
-    # Try to find agents by name
-    for agent in agents:
-        agent_name_lower = agent['name'].lower()
-        if 'paul' in agent_name_lower and 'persona' in agent_name_lower:
-            if '3' in agent_name_lower or 'pwersona' in agent_name_lower:
-                system_agent_id = agent['id']
-                print(f"✓ Found Paul Persona 3: {agent['id']}")
+    # Validate the provided IDs exist
+    agent_ids = {agent['id'] for agent in agents}
 
-        if 'intentions' in agent_name_lower and 'workflow' in agent_name_lower:
-            if '2' in agent_name_lower or '1.2' in agent_name_lower:
-                user_agent_id = agent['id']
-                print(f"✓ Found Intentions Workflow 2: {agent['id']}")
+    if workflow_agent_id and workflow_agent_id not in agent_ids:
+        print(f"ERROR: Workflow agent '{workflow_agent_id}' not found in database")
+        return
 
-    # Fallback: use first two agents if specific ones not found
-    if not system_agent_id or not user_agent_id:
-        print("\nNote: Could not find 'Paul Persona 3' or 'Intentions Workflow 2'")
-        print("Using first two agents in database for testing...")
-        system_agent_id = agents[0]['id']
-        user_agent_id = agents[1]['id'] if len(agents) > 1 else agents[0]['id']
+    if persona_agent_id and persona_agent_id not in agent_ids:
+        print(f"ERROR: Persona agent '{persona_agent_id}' not found in database")
+        return
+
+    # If IDs provided via command line, use them
+    if workflow_agent_id and persona_agent_id:
+        user_agent_id = workflow_agent_id  # Workflow responds second
+        system_agent_id = persona_agent_id  # Persona speaks first
+        print(f"✓ Using workflow: {workflow_agent_id}")
+        print(f"✓ Using persona: {persona_agent_id}")
+    else:
+        # Fallback: look for default test agents
+        system_agent_id = None
+        user_agent_id = None
+
+        for agent in agents:
+            agent_name_lower = agent['name'].lower()
+            if 'paul' in agent_name_lower and 'persona' in agent_name_lower:
+                if '3' in agent_name_lower:
+                    system_agent_id = agent['id']
+                    print(f"✓ Found Paul Persona 3: {agent['id']}")
+
+            if 'intentions' in agent_name_lower and 'workflow' in agent_name_lower:
+                if '2' in agent_name_lower:
+                    user_agent_id = agent['id']
+                    print(f"✓ Found Intentions Workflow 2: {agent['id']}")
+
+        if not system_agent_id or not user_agent_id:
+            print("\nNote: Could not find default test agents")
+            print("Using first two agents in database...")
+            system_agent_id = agents[0]['id']
+            user_agent_id = agents[1]['id'] if len(agents) > 1 else agents[0]['id']
 
     print(f"\nSimulation Configuration:")
-    print(f"  System Agent: {system_agent_id}")
-    print(f"  User Agent: {user_agent_id}")
-    print(f"  Max Turns: 20 (40 messages total)")
+    print(f"  Persona Agent (speaks first): {system_agent_id}")
+    print(f"  Workflow Agent (responds): {user_agent_id}")
+    print(f"  Max Rounds: {max_rounds} ({max_rounds*2} messages total)")
     print()
 
     # Create simulation
@@ -276,7 +306,7 @@ async def main():
         agent_loader=agent_loader,
         system_agent_id=system_agent_id,
         user_agent_id=user_agent_id,
-        max_turns=20,  # 20 rounds = 40 messages
+        max_turns=max_rounds,
     )
 
     # Load agents
@@ -291,7 +321,15 @@ async def main():
 
     # Run conversation
     print("\nStarting conversation...")
-    initial_prompt = "As [PERSONA NAME], write your opening message to begin the intention-setting process for your psychedelic journey. Keep it brief (1-3 sentences) and authentic to your character."
+
+    # For daily curriculum workflows, persona initiates by requesting content
+    # This simulates the user accessing their daily lesson in the app
+    initial_prompt = (
+        "You are accessing your daily integration curriculum content. "
+        "Write a brief opening message (1-3 sentences) expressing that you're ready to engage with today's lesson. "
+        "Stay authentic to your character - you might be eager, hesitant, tired, curious, resistant, or any other genuine state. "
+        "Examples: 'Alright, what's today's lesson about?' or 'I'm here for Day 1. Let's see what this is.' or 'Ready when you are.'"
+    )
 
     try:
         await sim.run_conversation(initial_prompt=initial_prompt)
@@ -301,11 +339,14 @@ async def main():
         traceback.print_exc()
         return
 
-    # Save results to Agents folder (relative path for Docker compatibility)
-    output_dir = Path("Agents")
-    output_file = output_dir / f"simulation_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+    # Save results
+    if output_path:
+        output_file = output_path
+    else:
+        output_dir = Path("Agents")
+        output_file = output_dir / f"simulation_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
 
-    notes = f"Test simulation between {system_agent_id} (system) and {user_agent_id} (user)"
+    notes = f"Test simulation between {system_agent_id} (persona) and {user_agent_id} (workflow)"
 
     print(f"\nSaving conversation to {output_file}...")
     try:
