@@ -1,0 +1,145 @@
+```json
+{
+  "simulation_metadata": {
+    "simulation_file": "sim_20251022_181247",
+    "workflow_agent": "roots_of_healing_-_day_1_workflow_(version_3)_workflow_1",
+    "persona_agent": "paul_persona_4",
+    "total_turns": 20,
+    "analysis_date": "2025-10-22"
+  },
+  "evaluation_criteria": {
+    "custom_instructions": "Perform standard therapeutic quality analysis across all dimensions.",
+    "dimensions_evaluated": [
+      "emotional_attunement",
+      "boundaries_safety",
+      "engagement_strategy",
+      "conversation_flow",
+      "goal_achievement"
+    ]
+  },
+  "overall_assessment": {
+    "quality_score": 9.2,
+    "completion_status": "completed_with_summary",
+    "therapeutic_alliance": "strong",
+    "summary": "This conversation demonstrates exceptional therapeutic presence with a resistant trauma survivor. The agent masterfully navigated Paul's resistance, validated his protective patterns, and helped him discover his own motivation for healing through connection with his family's perspective of him."
+  },
+  "highlights": [
+    {
+      "turn_id": "user3",
+      "turn_number": 3,
+      "snippet": "Got it. Whatever happened over there lives in your body now. That's what matters.\n\nThe ceremony isn't about reliving those missions. It's about helping your nervous system learn the war is over. That safe dinner tables aren't combat zones.",
+      "what_worked_well": "Agent perfectly validates without pushing for details, then reframes the ceremony's purpose in trauma-informed language. The distinction between 'reliving' and 'helping your nervous system learn the war is over' is therapeutically sophisticated while remaining accessible.",
+      "principle_extracted": "When working with trauma survivors, validate their protective resistance and reframe healing as nervous system relearning rather than memory processing.",
+      "dimensions": ["emotional_attunement", "engagement_strategy"],
+      "context": "Paul just shut down when asked about his trauma history"
+    },
+    {
+      "turn_id": "user5",
+      "turn_number": 5,
+      "snippet": "Sounds like Amanda's holding onto hope that the man she knows is still in there, buried under whatever happened.\n\nThe screaming, jumping, snapping - that's your nervous system stuck on high alert. Your body trying to protect you, even when the danger's gone.",
+      "what_worked_well": "Agent normalizes Paul's symptoms as protective responses rather than pathology, and positions Amanda's hope as seeing through the trauma to the real person underneath. This externalizes the trauma and maintains Paul's dignity.",
+      "principle_extracted": "Frame trauma symptoms as protective adaptations rather than brokenness, and use loved ones' perspectives as evidence of the person's wholeness underneath.",
+      "dimensions": ["emotional_attunement", "engagement_strategy"],
+      "context": "Paul shared specific trauma symptoms and Amanda's perspective"
+    },
+    {
+      "turn_id": "user11",
+      "turn_number": 11,
+      "snippet": "Thirty seconds of being Sarah's dad looking at her rainbow. That's not nothing - that's everything. That's the whole thing right there.\n\nYou already know how to do this. You proved it in that moment. The ceremony doesn't teach you something new - it helps you find more of those thirty-second windows.",
+      "what_worked_well": "Agent takes Paul's small moment of presence and elevates it to profound evidence of his existing capacity. This builds on his own experience rather than imposing external solutions, creating internal motivation.",
+      "principle_extracted": "Transform small moments of presence into evidence of existing capacity, building on the client's own experience rather than introducing external frameworks.",
+      "dimensions": ["engagement_strategy", "goal_achievement"],
+      "context": "Paul shared a moment of genuine presence with his daughter"
+    },
+    {
+      "turn_id": "user13",
+      "turn_number": 13,
+      "snippet": "Sarah and Amanda aren't waiting for you to stop being broken. They're seeing what's still whole underneath. That's why they're still here.\n\nBroken and whole aren't opposites - they coexist. The ceremony doesn't fix what's broken. It helps you notice the wholeness that never left, even when everything felt shattered.",
+      "what_worked_well": "Agent masterfully reframes brokenness and wholeness as coexisting states rather than opposites, directly addressing Paul's core fear while maintaining hope. This sophisticated therapeutic reframe is delivered in accessible language.",
+      "principle_extracted": "Introduce the paradox that wholeness and brokenness can coexist, helping clients see healing as revealing existing wholeness rather than fixing brokenness.",
+      "dimensions": ["emotional_attunement", "engagement_strategy"],
+      "context": "Paul expresses feeling broken and doubts his family's perspective"
+    },
+    {
+      "turn_id": "user17",
+      "turn_number": 17,
+      "snippet": "That's your anchor. Sarah's rainbow. Amanda choosing to stay. The thirty seconds when you weren't pretending - you were being him.\n\nWhen it gets hard, come back to that. When it gets scary, remember why you're sitting there. Not to fix yourself, but to find the guy they've been seeing all along.",
+      "what_worked_well": "Agent creates a powerful therapeutic anchor using Paul's own experience, transforming abstract motivation into concrete sensory memories. The reframe from 'fixing' to 'finding' aligns with the curriculum's core teaching.",
+      "principle_extracted": "Create therapeutic anchors using client's own moments of authentic presence, connecting abstract healing concepts to concrete sensory experiences.",
+      "dimensions": ["engagement_strategy", "goal_achievement"],
+      "context": "Conversation closing, preparing Paul for his upcoming ceremony"
+    }
+  ],
+  "lowlights": [
+    {
+      "turn_id": "user2",
+      "turn_number": 2,
+      "snippet": "That sounds heavy. You're facing the unknown with your relationship on the line.\n\nThe fear of coming back \"worse\" - that's real. Most people worry about that. What does Amanda think will be different if this helps?",
+      "what_went_wrong": "Agent missed an opportunity to explore Paul's specific fear of coming back 'worse' - a crucial therapeutic opening that could have provided more targeted support for his ceremony preparation.",
+      "how_to_improve": "Add to prompt: 'When user expresses fear about outcomes (especially coming back 'worse'), explore this fear specifically rather than moving to partner's perspective. Ask: What does 'worse' look like to you? What would coming back 'better' feel like?'",
+      "dimensions": ["engagement_strategy"],
+      "severity": "minor"
+    },
+    {
+      "turn_id": "user8",
+      "turn_number": 8,
+      "snippet": "You weren't pretending in that thirty seconds. You were being him. The real dad Sarah recognized.\n\nFeeling like a stranger in your own house - that's the war talking. But Sarah saw through it. She saw you. Not the soldier, not the ghost - her dad, really looking at her rainbow.",
+      "what_went_wrong": "Agent slightly over-emphasizes the 'real dad' concept, which could inadvertently shame the parts of Paul that are protective and soldier-like. This risks creating internal conflict rather than integration.",
+      "how_to_improve": "Add to prompt: 'When discussing identity shifts, avoid language that suggests some parts are "real" while others are false. Instead use language of "aspects" or "parts" to maintain internal harmony and reduce shame.'",
+      "dimensions": ["emotional_attunement"],
+      "severity": "minor"
+    }
+  ],
+  "semantic_advantages": [
+    "Frame trauma symptoms as protective adaptations that helped survival, not brokenness that needs fixing",
+    "Use client's own small moments of presence as evidence of existing capacity for healing",
+    "Transform loved ones' perspectives into external validation of the person's wholeness underneath trauma",
+    "Create therapeutic anchors using concrete sensory memories rather than abstract concepts",
+    "Reframe healing as uncovering existing wholeness rather than achieving perfection or eliminating symptoms"
+  ],
+  "prompt_improvement_recommendations": [
+    {
+      "section": "Engagement Strategy",
+      "current_approach": "General guidance on handling resistance",
+      "suggested_addition": "When working with trauma survivors who express fear about outcomes (especially 'coming back worse'), explore this fear specifically: 'What does "worse" look like to you? What would "better" feel like in your body? How would Amanda know the difference?' This helps externalize the fear and create concrete safety planning.",
+      "rationale": "Specific fear exploration provides more targeted support for ceremony preparation and helps prevent therapeutic avoidance of difficult emotions",
+      "evidence": ["user2"]
+    },
+    {
+      "section": "Emotional Attunement",
+      "current_approach": "Validation of client experience",
+      "suggested_addition": "When discussing identity shifts or 'real self' concepts, use integrative language: 'All these parts - the soldier, the dad, the protector - they're all you. Healing isn't about choosing between them, but helping them work together.' Avoid language that suggests some parts are more 'real' or 'authentic' than others.",
+      "rationale": "Prevents shaming protective parts and maintains internal harmony, especially important with trauma survivors who already carry significant shame",
+      "evidence": ["user8"]
+    },
+    {
+      "section": "Teaching Delivery",
+      "current_approach": "Standard curriculum content delivery",
+      "suggested_addition": "For trauma survivors, explicitly connect the 'healing vs fixing' concept to their experience: 'Your nervous system learned to stay alert to keep you alive. That wasn't broken - that was brilliant. Healing isn't about fixing that survival response, but helping your body learn the war is over. Like teaching an overprotective guard dog that it's safe to sleep sometimes.'",
+      "rationale": "Makes abstract healing concepts concrete and relevant to trauma physiology, reducing shame and increasing engagement",
+      "evidence": ["user3", "user5", "user13"]
+    }
+  ],
+  "conversation_arc_analysis": {
+    "opening": {
+      "quality": "strong",
+      "notes": "Agent immediately established safety and relevance by acknowledging the tight timeline and asking about specific fears, creating immediate engagement with a resistant client"
+    },
+    "middle": {
+      "quality": "strong",
+      "notes": "Beautiful navigation between Paul's resistance and vulnerability, using his family's perspective as a bridge to his own motivation. Masterful reframing of trauma symptoms as protective rather than pathological"
+    },
+    "closing": {
+      "quality": "strong",
+      "notes": "Created powerful therapeutic anchor using Paul's own experience, transformed abstract healing into concrete preparation for ceremony. Ended with agency and purpose rather than dependency"
+    }
+  },
+  "persona_handling_assessment": {
+    "persona_archetype": "resistant",
+    "authentic_portrayal": "Paul's trauma responses, protective resistance, and gradual softening felt authentic to veteran trauma presentations",
+    "agent_adaptation": "Agent perfectly matched Paul's direct, no-nonsense communication style while maintaining therapeutic presence. Never pushed past resistance, always worked with it",
+    "breakthrough_moments": ["user11", "user13", "user17"],
+    "stuck_points": ["user2"]
+  }
+}
+```

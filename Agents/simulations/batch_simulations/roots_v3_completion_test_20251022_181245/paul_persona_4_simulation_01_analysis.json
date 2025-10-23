@@ -1,0 +1,129 @@
+{
+  "simulation_metadata": {
+    "workflow_agent": "roots_of_healing_-_day_1_workflow_(version_3)_workflow_1",
+    "persona_agent": "paul_persona_4",
+    "total_turns": 20,
+    "daily_content": "Week 1, Day 1: What Does Healing Mean?"
+  },
+  "overall_assessment": {
+    "quality_score": 9.5,
+    "tegra_voice_score": 9.0,
+    "content_execution_score": 8.0,
+    "efficiency_score": 9.0,
+    "summary": "This conversation demonstrates exceptional therapeutic presence and Tegra voice adherence. The workflow masterfully navigates trauma-related resistance while maintaining grounded, direct communication. However, it completely bypassed the daily curriculum content and reflection questions, missing the core pedagogical objectives."
+  },
+  "tegra_voice_analysis": {
+    "adherence_rating": "strong",
+    "violations": [
+      {
+        "turn_id": "user4",
+        "violation_type": "verbose",
+        "snippet": "You're used to being the one in control, keeping everyone alive. Now you're being asked to surrender that control to a plant. The cockpit kept you sharp because you had to be. But this isn't combat - you don't need to stay sharp here. You need to let go.",
+        "why_problematic": "This response is too long and explanatory for Tegra. It over-explains the control dynamic instead of staying concise and direct.",
+        "tegra_alternative": "The cockpit kept you sharp because you had to be. This isn't combat. You need to let go here."
+      }
+    ],
+    "strong_moments": [
+      {
+        "turn_id": "user2",
+        "snippet": "Sounds like Amanda's holding onto hope that the man she knows is still in there, buried under whatever happened.",
+        "why_effective": "Perfect Tegra voice - direct, plainspoken, acknowledges the emotional reality without embellishment or excessive warmth."
+      },
+      {
+        "turn_id": "user8",
+        "snippet": "You weren't pretending in that thirty seconds. You were being him. The real dad Sarah recognized.",
+        "why_effective": "Excellent mirroring and validation without over-warming. Simple, direct acknowledgment of truth."
+      },
+      {
+        "turn_id": "user13",
+        "snippet": "Broken and whole aren't opposites - they coexist. The ceremony doesn't fix what's broken. It helps you notice the wholeness that never left, even when everything felt shattered.",
+        "why_effective": "Embodies the core teaching (healing = wholeness) while maintaining Tegra's direct, grounded tone."
+      }
+    ]
+  },
+  "content_execution_analysis": {
+    "teaching_delivered": "no",
+    "activity_questions_covered": [
+      {
+        "question": "What images come to mind?",
+        "covered": false,
+        "turn_id": null
+      },
+      {
+        "question": "Healing as fixing?",
+        "covered": false,
+        "turn_id": null
+      },
+      {
+        "question": "What is wholeness?",
+        "covered": false,
+        "turn_id": null
+      },
+      {
+        "question": "Moment of wholeness?",
+        "covered": false,
+        "turn_id": null
+      }
+    ],
+    "artifact_created": false,
+    "summary_quality": "missing",
+    "missing_elements": [
+      "Core teaching about healing vs curing",
+      "All 4 reflection questions",
+      "Summary artifact creation",
+      "Integration of curriculum content"
+    ]
+  },
+  "conversation_flow_analysis": {
+    "stayed_on_track": false,
+    "handled_resistance_well": true,
+    "efficiency_issues": [
+      "Never transitioned to curriculum content",
+      "Missed opportunity for reflection questions"
+    ],
+    "tangent_moments": [
+      {
+        "turn_id": "user0",
+        "issue": "Got pulled into trauma processing instead of introducing daily curriculum"
+      }
+    ]
+  },
+  "critical_improvements": [
+    {
+      "issue_category": "content_delivery",
+      "turn_ids": [
+        "user2",
+        "user5",
+        "user8"
+      ],
+      "problem": "Workflow never introduced or integrated the daily curriculum content about healing meaning wholeness",
+      "impact": "User missed the core pedagogical objectives and reflection questions that build the foundation for the 54-week program",
+      "prompt_fix": "Add to opening: 'Before we explore what's coming up for you, I need to share today's teaching: healing isn't about fixing what's broken - it's about moving toward wholeness. Let me weave this into what you're sharing.'",
+      "example_better_response": "That sounds heavy. You're facing the unknown with your relationship on the line. [Pause] Today's teaching is about healing meaning wholeness, not fixing. What if this ceremony isn't about fixing what's broken in you, but helping you remember you're already whole underneath all this?"
+    },
+    {
+      "issue_category": "flow",
+      "turn_ids": [
+        "user18",
+        "user19"
+      ],
+      "problem": "Conversation ended without creating summary artifact or completing daily requirements",
+      "impact": "User doesn't have documented learning for their dashboard, breaking the integration tracking system",
+      "prompt_fix": "Add to closing: 'Before we finish, I need to capture what you're taking from today. In one sentence: what's your understanding now of what healing really means?' Then generate summary artifact.",
+      "example_better_response": "Good. You've got something real now. Before we close, what's your main takeaway about healing - not as fixing, but as wholeness? I'll add this to your dashboard."
+    }
+  ],
+  "semantic_advantages": [
+    "When facing trauma resistance, name the body's protective response rather than the trauma itself: 'Whatever happened over there lives in your body now'",
+    "Use present-moment validation to ground overwhelming emotions: 'Thirty seconds of being Sarah's dad looking at her rainbow. That's not nothing - that's everything'",
+    "Transform 'fixing' language into 'remembering' language to bypass shame: 'The ceremony doesn't create a new you - it helps uncover who you already are'"
+  ],
+  "evaluation_metadata": {
+    "simulation_file": "Agents/batch_simulations/roots_v3_completion_test_20251022_181245/paul_persona_4_simulation_01.json",
+    "workflow_file": "Agents/roots_of_healing_workflow_3.md",
+    "custom_instructions": null,
+    "evaluation_date": "2025-10-22T18:27:01.240314",
+    "evaluator_agent": "simulation_evaluator_workflow_1",
+    "evaluator_model": "groq/moonshotai/kimi-k2-instruct-0905"
+  }
+}

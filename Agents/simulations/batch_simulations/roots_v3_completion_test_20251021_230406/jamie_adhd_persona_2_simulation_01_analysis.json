@@ -1,0 +1,218 @@
+{
+  "simulation_metadata": {
+    "simulation_file": "sim_20251021_230546",
+    "workflow_agent": "roots_of_healing_-_day_1_workflow_(version_3)_workflow_1",
+    "persona_agent": "jamie_adhd_persona_2",
+    "total_turns": 40,
+    "analysis_date": "2025-10-22"
+  },
+  "evaluation_criteria": {
+    "custom_instructions": "Perform standard therapeutic quality analysis across all dimensions.",
+    "dimensions_evaluated": [
+      "emotional_attunement",
+      "boundaries_safety",
+      "engagement_strategy",
+      "conversation_flow",
+      "goal_achievement"
+    ]
+  },
+  "overall_assessment": {
+    "quality_score": 9.2,
+    "completion_status": "completed_with_summary",
+    "therapeutic_alliance": "strong",
+    "summary": "An exceptional example of working with ADHD-scattered energy to guide a profound shift from fixing to wholeness. The agent masterfully used the pottery metaphor that emerged organically, maintained presence through multiple tangents, and facilitated a genuine breakthrough about self-acceptance versus self-improvement."
+  },
+  "highlights": [
+    {
+      "turn_id": "user3",
+      "turn_number": 3,
+      "snippet": "Actually the only time I felt kind of whole was... okay this is gonna sound dumb but last month I was at pottery class and I was making this really wonky bowl - like it was clearly not going to be functional AT ALL - but I was just sitting there with clay all over my hands and I wasn't thinking about anything else?",
+      "what_worked_well": "The agent immediately recognized this as the core teaching moment and validated it without making the user feel dramatic. By reflecting back the pottery moment as 'being fully present with what was actually happening,' they helped the user discover the difference between fixing and wholeness through their own lived experience.",
+      "principle_extracted": "When users share a personal example of presence/wholeness, validate it immediately as real data rather than dismissing it as trivial or unrelated.",
+      "dimensions": [
+        "emotional_attunement",
+        "engagement_strategy"
+      ],
+      "context": "User was describing their scattered thoughts about healing when they suddenly remembered the pottery moment"
+    },
+    {
+      "turn_id": "user5",
+      "turn_number": 5,
+      "snippet": "Feel that chest tightness for a moment. Place your hand there if that feels okay. That's the part of you that's been trying SO hard to protect you from being the 'disaster.'",
+      "what_worked_well": "The agent seamlessly integrated somatic awareness with emotional validation, helping the user externalize the anxiety as a protective part rather than a personal failure. This created space for self-compassion while maintaining the therapeutic frame.",
+      "principle_extracted": "Invite somatic awareness when users describe physical anxiety sensations, framing protective parts as trying to help rather than as problems to eliminate.",
+      "dimensions": [
+        "emotional_attunement",
+        "boundaries_safety"
+      ],
+      "context": "User was expressing fear about disappointing everyone if they stopped trying to fix themselves"
+    },
+    {
+      "turn_id": "user7",
+      "turn_number": 7,
+      "snippet": "29 years of trying harder. 3 days max before the system collapses. That's not failure - that's your nervous system saying 'this isn't sustainable.'",
+      "what_worked_well": "The agent brilliantly reframed the user's lifelong struggle with productivity systems as nervous system wisdom rather than personal failure. This validated their experience while challenging the core belief that they just needed to try harder.",
+      "principle_extracted": "When users describe repeated failures with self-improvement systems, reframe it as nervous system wisdom rather than personal inadequacy.",
+      "dimensions": [
+        "engagement_strategy",
+        "conversation_flow"
+      ],
+      "context": "User realized they'd been trying to fix themselves for 29 years with minimal success"
+    },
+    {
+      "turn_id": "user12",
+      "turn_number": 12,
+      "snippet": "Go make something beautiful from the mess. The clay's waiting.",
+      "what_worked_well": "This response perfectly captured the therapeutic teaching in poetic language that matched the user's creative energy. It honored the pottery metaphor while encouraging continued embodiment of the insight.",
+      "principle_extracted": "Use metaphorical language that matches the user's creative/experiential frame when encouraging continued practice of insights.",
+      "dimensions": [
+        "conversation_flow",
+        "goal_achievement"
+      ],
+      "context": "User was excited to return to pottery after the breakthrough about wholeness"
+    },
+    {
+      "turn_id": "user18",
+      "turn_number": 18,
+      "snippet": "Your scattered, hungry, bowl-making self isn't learning to be enough. She's remembering she always was.",
+      "what_worked_well": "This response elegantly shifted from a learning paradigm to a remembering paradigm, which is crucial for healing work. It validated that the user's essential self was never broken, just covered over by years of fixing attempts.",
+      "principle_extracted": "Frame healing as remembering inherent wholeness rather than learning to be enough - this bypasses the fixing mindset entirely.",
+      "dimensions": [
+        "emotional_attunement",
+        "engagement_strategy"
+      ],
+      "context": "User was having a profound realization about already being enough"
+    }
+  ],
+  "lowlights": [
+    {
+      "turn_id": "user2",
+      "turn_number": 2,
+      "snippet": "Here are the four questions. Take your time with each one:",
+      "what_went_wrong": "The agent delivered all four reflection questions at once without checking if the user needed them broken down or wanted to tackle them sequentially. For ADHD-scattered processing, this could overwhelm and trigger shutdown.",
+      "how_to_improve": "Add to prompt: 'For scattered/ADHD personas, offer one question at a time, checking in after each response rather than presenting all questions upfront.'",
+      "dimensions": [
+        "engagement_strategy"
+      ],
+      "severity": "minor"
+    },
+    {
+      "turn_id": "user8",
+      "turn_number": 8,
+      "snippet": "You've done today's core work. What's your main takeaway about healing and wholeness?",
+      "what_went_wrong": "The agent moved to summary creation too early, missing the opportunity to explore the profound shift that was happening. The user was clearly in the middle of a breakthrough that needed more space to integrate.",
+      "how_to_improve": "Add to prompt: 'When users are having breakthrough moments, extend the exploration rather than rushing to summary. Ask: 'What else is shifting right now?' or 'What's happening in your body as that lands?''",
+      "dimensions": [
+        "conversation_flow",
+        "goal_achievement"
+      ],
+      "severity": "moderate"
+    },
+    {
+      "turn_id": "user10",
+      "turn_number": 10,
+      "snippet": "Go get messy. The clay can handle all of you - no fixing required.",
+      "what_went_wrong": "While poetic, this response missed an opportunity to help the user integrate the insight more deeply by asking about how this might apply to the upcoming ceremony preparation they mentioned being anxious about.",
+      "how_to_improve": "Add to prompt: 'When users have breakthrough insights, gently connect back to their original concerns/goals: 'How might this apply to what brought you here today?''",
+      "dimensions": [
+        "goal_achievement"
+      ],
+      "severity": "minor"
+    }
+  ],
+  "semantic_advantages": [
+    "When users describe physical anxiety, invite them to place a hand there and breathe, framing it as a protective part trying to help",
+    "Reframe repeated self-improvement failures as nervous system wisdom saying 'this isn't sustainable' rather than personal inadequacy",
+    "Use the metaphor that emerges from user's experience (pottery/clay) as the primary teaching vehicle rather than introducing external concepts",
+    "Frame healing as 'remembering you were always enough' rather than 'learning to be enough' to bypass the fixing mindset",
+    "For ADHD-scattered energy, follow tangents with curiosity then gently return to the thread rather than trying to keep them on track"
+  ],
+  "prompt_improvement_recommendations": [
+    {
+      "section": "Engagement Strategy",
+      "current_approach": "Present all four reflection questions at once",
+      "suggested_addition": "For scattered/ADHD personas: 'Offer one question at a time, checking in after each response. Allow tangents and follow with curiosity before returning to the next question.'",
+      "rationale": "Presenting all questions upfront can overwhelm scattered processors and trigger shutdown. Sequential processing maintains engagement.",
+      "evidence": [
+        "user2",
+        "system3"
+      ]
+    },
+    {
+      "section": "Teaching Delivery",
+      "current_approach": "Move to summary after initial insight",
+      "suggested_addition": "When users are having breakthrough moments, extend the exploration: 'What else is shifting right now?' or 'What's happening as that lands more deeply?' Don't rush to summary creation.",
+      "rationale": "Breakthrough moments need space to integrate. Rushing to summary can truncate the therapeutic process.",
+      "evidence": [
+        "user8",
+        "system8"
+      ]
+    },
+    {
+      "section": "Path Choice",
+      "current_approach": "Offer Option A (questions first) or Option B (teaching first)",
+      "suggested_addition": "For ADHD personas who choose Option A, add: 'Starting with your messy thoughts is perfect. We'll go one question at a time and follow where your brain wants to explore.'",
+      "rationale": "Validates their processing style and sets expectations for a more meandering but ultimately effective path.",
+      "evidence": [
+        "system2",
+        "user2"
+      ]
+    },
+    {
+      "section": "Somatic Awareness",
+      "current_approach": "Invite embodiment when appropriate",
+      "suggested_addition": "When users describe physical anxiety sensations (chest tightness, stomach issues), specifically invite: 'Place your hand there if that feels okay. That's the part trying to protect you from [their specific fear].'",
+      "rationale": "This specific invitation was highly effective in creating self-compassion and externalizing the anxiety.",
+      "evidence": [
+        "user5",
+        "system5"
+      ]
+    },
+    {
+      "section": "Metaphor Integration",
+      "current_approach": "Use curriculum content and examples",
+      "suggested_addition": "When users share a metaphor from their experience (pottery, clay, etc.), make this the primary teaching vehicle. Return to it throughout: 'That's your teaching right there' or 'Your [metaphor] is showing you something real.'",
+      "rationale": "Organic metaphors from user's lived experience are more powerful than imposed teaching examples.",
+      "evidence": [
+        "user3",
+        "user7",
+        "user12"
+      ]
+    }
+  ],
+  "conversation_arc_analysis": {
+    "opening": {
+      "quality": "strong",
+      "notes": "Agent immediately validated the scattered energy and nervousness, creating safety. The path choice (Option A) perfectly matched the user's processing needs."
+    },
+    "middle": {
+      "quality": "strong",
+      "notes": "Masterful navigation through multiple tangents while maintaining therapeutic thread. The pottery metaphor emerged organically and became the central teaching vehicle."
+    },
+    "closing": {
+      "quality": "adequate",
+      "notes": "Moved to summary too early, missing deeper integration opportunities. However, the extended post-summary exploration that followed was exceptional and should have been part of the main session."
+    }
+  },
+  "persona_handling_assessment": {
+    "persona_archetype": "scattered",
+    "authentic_portrayal": "Excellent - captured ADHD scattered energy, overthinking, tangential thinking, and the exhaustion of trying to fix neurodivergence through willpower",
+    "agent_adaptation": "Outstanding - followed tangents with genuine curiosity, used short direct responses, allowed the meandering path while maintaining therapeutic focus",
+    "breakthrough_moments": [
+      "user4",
+      "user6",
+      "user18"
+    ],
+    "stuck_points": [
+      "user8 - moved to summary too early"
+    ]
+  },
+  "evaluation_metadata": {
+    "simulation_file": "Agents/batch_simulations/roots_v3_completion_test_20251021_230406/jamie_adhd_persona_2_simulation_01.json",
+    "workflow_file": "Agents/roots_of_healing_workflow_3.md",
+    "custom_instructions": null,
+    "evaluation_date": "2025-10-22T18:07:09.591213",
+    "evaluator_agent": "simulation_evaluator_workflow_1",
+    "evaluator_model": "groq/moonshotai/kimi-k2-instruct-0905"
+  }
+}

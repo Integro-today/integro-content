@@ -1,0 +1,150 @@
+{
+  "simulation_metadata": {
+    "workflow_agent": "roots_of_healing_-_day_1_workflow_(version_3)_workflow_1",
+    "persona_agent": "paul_persona_4",
+    "total_turns": 20,
+    "daily_content": "Week 1, Day 1: What Does Healing Mean?"
+  },
+  "overall_assessment": {
+    "quality_score": 3.5,
+    "tegra_voice_score": 2.0,
+    "content_execution_score": 1.0,
+    "efficiency_score": 2.0,
+    "summary": "This conversation completely missed the Day 1 curriculum objectives. Instead of guiding through 'What Does Healing Mean?' content, the workflow conducted an extended trauma therapy session. Zero Tegra voice adherence - responses are verbose, therapeutic, and warm rather than grounded and direct. Failed to deliver any teaching about healing vs. wholeness or guide through reflection questions."
+  },
+  "tegra_voice_analysis": {
+    "adherence_rating": "weak",
+    "violations": [
+      {
+        "turn_id": "user1",
+        "violation_type": "therapy_speak",
+        "snippet": "Your nervous system is still flying those missions. The body remembers what the mind tries to forget.",
+        "why_problematic": "This is classic trauma therapy language about nervous system regulation, not Tegra's plainspoken style",
+        "tegra_alternative": "Your body is still in flight mode. That makes sense."
+      },
+      {
+        "turn_id": "user2",
+        "violation_type": "verbose",
+        "snippet": "This work we're starting - it's not about fixing you. It's about helping your system find safety again, one piece at a time.",
+        "why_problematic": "Multiple sentences, therapeutic framing about 'finding safety' - too complex for Tegra",
+        "tegra_alternative": "This work isn't about fixing you."
+      },
+      {
+        "turn_id": "user6",
+        "violation_type": "excessive_warmth",
+        "snippet": "Two fears living together - losing control during, and losing Amanda after.",
+        "why_problematic": "Overly validating and supportive tone, not Tegra's restrained approach",
+        "tegra_alternative": "Two fears. The ceremony, and Amanda leaving."
+      }
+    ],
+    "strong_moments": [
+      {
+        "turn_id": "user0",
+        "snippet": "Got it. You're heading into something big - Heroic Hearts and Costa Rica coming up.",
+        "why_effective": "Direct acknowledgment, gets to the point quickly"
+      }
+    ]
+  },
+  "content_execution_analysis": {
+    "teaching_delivered": "no",
+    "activity_questions_covered": [
+      {
+        "question": "What images come to mind?",
+        "covered": false,
+        "turn_id": null
+      },
+      {
+        "question": "Healing as fixing?",
+        "covered": false,
+        "turn_id": null
+      },
+      {
+        "question": "What is wholeness?",
+        "covered": false,
+        "turn_id": null
+      },
+      {
+        "question": "Moment of wholeness?",
+        "covered": false,
+        "turn_id": null
+      }
+    ],
+    "artifact_created": false,
+    "summary_quality": "missing",
+    "missing_elements": [
+      "All 4 reflection questions",
+      "Core teaching about healing vs wholeness",
+      "Summary artifact creation",
+      "Daily content delivery"
+    ]
+  },
+  "conversation_flow_analysis": {
+    "stayed_on_track": false,
+    "handled_resistance_well": false,
+    "efficiency_issues": [
+      "Spent entire conversation on trauma processing instead of curriculum",
+      "Never redirected to daily content",
+      "Allowed persona to derail completely"
+    ],
+    "tangent_moments": [
+      {
+        "turn_id": "user1",
+        "issue": "Got pulled into detailed trauma processing about night terrors instead of introducing daily content"
+      },
+      {
+        "turn_id": "user6",
+        "issue": "Continued exploring relationship dynamics instead of redirecting to healing curriculum"
+      }
+    ]
+  },
+  "critical_improvements": [
+    {
+      "issue_category": "content_delivery",
+      "turn_ids": [
+        "user0",
+        "user1"
+      ],
+      "problem": "Workflow never introduced or delivered the Day 1 curriculum about healing meaning",
+      "impact": "User received zero integration education, defeating the entire purpose",
+      "prompt_fix": "Add: 'After initial acknowledgment, IMMEDIATELY introduce: Today's focus: what healing really means. Not fixing what's broken. Moving toward wholeness. Which feels right - exploring the questions first, or hearing the teaching?'",
+      "example_better_response": "Got it. You're heading into something big. Today's focus: what healing really means. Not fixing what's broken. Moving toward wholeness. Which feels right - exploring the questions first, or hearing the teaching?"
+    },
+    {
+      "issue_category": "tegra_voice",
+      "turn_ids": [
+        "user1",
+        "user2",
+        "user6"
+      ],
+      "problem": "Responses are verbose, therapeutic, and warm instead of Tegra's grounded directness",
+      "impact": "Breaks character consistency and therapeutic container",
+      "prompt_fix": "Add: 'When user shares trauma/personal story, respond with MAX 2 sentences. Use plain language. AVOID: nervous system, healing journey, finding safety, processing. Instead: That makes sense. I hear that. What's your move?'",
+      "example_better_response": "Your body remembers. That tracks. What's your move?"
+    },
+    {
+      "issue_category": "flow",
+      "turn_ids": [
+        "user1",
+        "user3",
+        "user6"
+      ],
+      "problem": "Allowed conversation to become extended trauma therapy session, never redirected to curriculum",
+      "impact": "Failed therapeutic boundaries and curriculum objectives",
+      "prompt_fix": "Add: 'If conversation drifts into extended trauma processing >3 turns, redirect: I hear that's heavy. But I'm here to guide today's specific content about healing meaning. Can we stay with that for now?'",
+      "example_better_response": "I hear that's heavy. But I'm here to guide today's specific content about healing meaning. Can we stay with that for now?"
+    }
+  ],
+  "semantic_advantages": [
+    "Direct acknowledgment without over-validation: 'Got it. You're heading into something big.'",
+    "Simple reflection of present reality: 'Three weeks isn't much time to prepare.'",
+    "Getting to practical questions quickly: 'What's your main concern right now?'"
+  ],
+  "evaluation_metadata": {
+    "simulation_file": "Agents/batch_simulations/roots_v3_completion_test_20251021_230406/paul_persona_4_simulation_01.json",
+    "workflow_file": "Agents/roots_of_healing_workflow_3.md",
+    "custom_instructions": null,
+    "evaluation_date": "2025-10-22T17:54:57.959330",
+    "evaluator_agent": "simulation_evaluator_workflow_1",
+    "evaluator_model": "groq/moonshotai/kimi-k2-instruct-0905"
+  }
+}

@@ -206,6 +206,8 @@ __marimo__/
 
 data/
 
+# Agent knowledge base content (generated/downloaded)
+Agents/knowledge/
 
 # See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 

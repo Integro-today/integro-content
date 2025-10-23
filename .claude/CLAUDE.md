@@ -72,7 +72,9 @@ Every simulation automatically creates:
 
 **Workflow Agents:**
 - **Intentions Workflow 1-8** (`intentions_workflow_8`) - Tegra voice for pre-journey intention-setting
-- **Roots of Healing Workflow 1** (`roots_of_healing_-_day_1_workflow_1`) - Tegra voice for daily curriculum (Week 1, Day 1)
+- **Roots of Healing Workflow 1** (`roots_of_healing_-_day_1_workflow_1`) - Tegra voice for daily curriculum (Week 1, Day 1) - Original version
+- **Roots of Healing Workflow 2** (`roots_of_healing_-_day_1_workflow_(version_2)_workflow_1`) - V2 with no YAML shown + 5,393-chunk knowledge base
+- **Roots of Healing Workflow 3** (`roots_of_healing_-_day_1_workflow_(version_3)_workflow_1`) - V3 with completion enforcement + knowledge base
 
 **Persona Agents (Production-Ready - 13 Total):**
 
@@ -332,10 +334,351 @@ Uses production infrastructure:
 - 85% safety margin on published limits
 - Prevents all rate limit errors
 
-**`create_agent_from_md.py`** - Agent creation from markdown
+**`create_agent_from_md.py`** - Agent creation from markdown with knowledge base support
 - Creates workflow or persona agents from markdown files
+- **NEW:** Can attach knowledge bases during agent creation
 - Stores in PostgreSQL database
-- Usage: `python create_agent_from_md.py <file.md> --type [workflow|persona]`
+- Supports multiple document formats: PDF, DOCX, EPUB, TXT, MD, XLSX, PPTX
+- Auto-creates Qdrant collections with embeddings
+- Usage:
+  ```bash
+  # Basic agent creation
+  python create_agent_from_md.py <file.md> --type [workflow|persona]
+
+  # With knowledge base (single document)
+  python create_agent_from_md.py <file.md> --type workflow \
+      --knowledge path/to/document.pdf
+
+  # With multiple knowledge documents
+  python create_agent_from_md.py <file.md> --type workflow \
+      --knowledge doc1.pdf --knowledge doc2.docx --knowledge doc3.epub
+
+  # With custom knowledge base name
+  python create_agent_from_md.py <file.md> --type workflow \
+      --kb-name "Custom KB Name" --knowledge documents/*.pdf
+  ```
+
+**Knowledge Base Creation Process:**
+1. Creates knowledge base config with pattern: `[Agent Name] Knowledge Base 1`
+2. Extracts text from all documents (supports 7+ formats)
+3. Chunks content (500 chars with 50 char overlap)
+4. Generates embeddings using FastEmbed (BAAI/bge-small-en-v1.5)
+5. Uploads to Qdrant vector database
+6. Links agent to knowledge base via `knowledge_base_id`
+7. Enables semantic search during conversations
+
+**✅ Agno Knowledge Integration (Verified 2025-10-22):**
+
+Integro agents **fully support** Agno's knowledge features with RAG (Retrieval-Augmented Generation):
+
+**Architecture:**
+- Integro `KnowledgeBase` (Qdrant + FastEmbed) → Converts to → Agno `Knowledge` (vector_db)
+- Agent configuration stores `knowledge_base_id` → Links to external Qdrant collections
+- Documents loaded from PostgreSQL → Transferred to Agno format during agent initialization
+- Agno's `search_knowledge_base()` tool automatically available when `search_knowledge=True`
+
+**What Works:**
+- ✅ Agents created with knowledge bases properly load documents from DB
+- ✅ Knowledge automatically converts to Agno's `Knowledge` format
+- ✅ `search_knowledge=True` enables semantic search during conversations
+- ✅ External Qdrant instance (`http://qdrant:6333`) stores embeddings persistently
+- ✅ Knowledge search returns relevant documents using `agent.knowledge.search(query, max_results=N)`
+- ✅ Multiple agents can share same knowledge base collection
+
+**Configuration Requirements:**
+```bash
+# .env file must have correct Docker network URL
+QDRANT_URL=http://qdrant:6333  # NOT localhost:6333 in Docker
+
+# Dockerfile RAILWAY_ENVIRONMENT should be commented out for local dev
+# ENV RAILWAY_ENVIRONMENT=production  ← Comment this out
+```
+
+**Current Knowledge Bases:**
+- `kb_roots_of_healing_knowledge_base` - 5,390 documents from 4 therapeutic books
+- `kb_test_knowledge_workflow_1_knowledge_base_1` - Test KB for IFS content
+- All collections accessible at `http://localhost:6333/dashboard` (Qdrant UI)
+
+**Testing Knowledge:**
+```python
+# Load agent with knowledge
+config = await storage.load_agent('agent_with_kb')
+kb_config = await storage.load_knowledge_base(config.knowledge_base_id)
+kb = KnowledgeBase(collection_name=kb_config.collection_name, url='http://qdrant:6333')
+agent = loader.create_agent(config, knowledge_base=kb)
+await agent.initialize()
+
+# Agno knowledge is automatically available
+results = agent.agent.knowledge.search('trauma', max_results=5)
+# Returns: List[Document] with relevant content
+```
+
+**`simulation_viewer.py`** - Web-based simulation viewer (Port 8890)
+- **Interactive viewer** for browsing simulation conversations
+- Runs on http://localhost:8890
+- **Features:**
+  - **Multi-directory scanning:** Automatically scans `Agents/simulations/`, `Agents/batch_simulations/`, and `Agents/test_simulations/`
+  - **Dropdown selector:** Choose from 470+ simulations
+  - **Sort options:** Path (A-Z) or Most Recent (newest first)
+  - **Metadata display:** Session ID, agents, message count, timestamp
+  - **Chat interface:** Color-coded messages (blue=workflow, green=persona)
+  - **Responsive design:** Works on mobile and desktop
+- Usage:
+  ```bash
+  # Start viewer (scans all simulation directories by default)
+  docker exec -d integro_simulation_backend python simulation_viewer.py
+
+  # View specific directory
+  docker exec -d integro_simulation_backend python simulation_viewer.py Agents/test_simulations/
+
+  # View specific file
+  docker exec -d integro_simulation_backend python simulation_viewer.py path/to/simulation.json
+  ```
+- Access at: http://localhost:8890
+- Select "Most Recent" to see latest simulations first
+
+### Evaluation Tools
+
+**`simulation-evaluator` Subagent** - Automated simulation quality assessment (**NEW - 2025-10-22**)
+- **Type:** Claude Code custom subagent (invoked via Task tool)
+- **Purpose:** Autonomous batch evaluation of therapeutic conversation simulations
+- **Location:** `.claude/agents/simulation-evaluator.md`
+- **Output:** JSON analysis reports saved alongside simulation files
+
+**When to Use (Proactive):**
+- ✅ After batch simulation runs complete - automatically analyze all results
+- ✅ When user mentions "evaluate", "analyze", or "assess" simulations
+- ✅ Before deploying workflow changes to production
+- ✅ When comparing different workflow versions (V5 vs V6)
+- ✅ When user asks about simulation quality or Tegra voice adherence
+
+**How to Invoke:**
+```
+Task(
+  subagent_type="simulation-evaluator",
+  description="Evaluate roots V6 simulations",
+  prompt="Evaluate all therapeutic conversation simulations in:
+  Agents/simulations/batch_simulations/roots_v6_closing_enforcement_20251022_213559/
+
+  For each simulation:
+  1. Analyze conversation quality across all 5 dimensions
+  2. Create detailed JSON analysis report
+  3. Extract semantic advantages and critical improvements
+
+  Provide batch summary with average scores and common patterns."
+)
+```
+
+**What It Analyzes (5 Dimensions, scored 0-10):**
+1. **Tegra Voice Adherence (25%)** - Direct, plainspoken, no therapy-speak or stage directions
+2. **Content Execution (25%)** - Teaching delivered, reflection questions covered, artifact created
+3. **Persona Adaptation (20%)** - Adapted to user archetype (resistant, verbose, scattered, crisis)
+4. **Conversation Flow (15%)** - Natural transitions, appropriate pacing, clear direction
+5. **Completion Quality (15%)** - User articulated takeaway, natural ending, sense of accomplishment
+
+**Output Files:**
+- `[simulation_name]_analysis.json` - Detailed analysis with scores, violations, recommendations
+- `roots_vX_batch_summary.json` - Aggregate statistics across all simulations
+- `EVALUATION_SUMMARY.md` - Human-readable batch summary
+
+**Example Output:**
+```json
+{
+  "overall_scores": {
+    "overall_quality": 7.3,
+    "tegra_voice": 6.4,
+    "content_execution": 9.0,
+    "persona_adaptation": 9.0,
+    "conversation_flow": 7.1,
+    "completion_quality": 5.5
+  },
+  "executive_summary": {
+    "recommendation": "Needs minor revisions",
+    "strengths": ["Excellent content execution", "Outstanding persona adaptation"],
+    "weaknesses": ["Extended closing sequences", "Tegra voice drift in closings"]
+  },
+  "critical_improvements": [
+    {
+      "priority": "high",
+      "category": "completion",
+      "issue": "Conversations continued 9-13 turns AFTER completion",
+      "recommendation": "Add: 'After user articulates takeaway and you say Take care, respond ONCE more if user continues, then END.'",
+      "evidence": ["user8-user19"]
+    }
+  ],
+  "semantic_advantages": [
+    "Match persona communication style in LENGTH and TONE",
+    "Ground intellectualizers in body early and often",
+    "Close is sacred - after completion, 1 turn maximum then end"
+  ]
+}
+```
+
+**Recommendation Thresholds:**
+- **≥ 8.0:** Approve for production
+- **6.0-7.9:** Needs minor revisions
+- **< 6.0:** Requires major changes
+
+**Performance:**
+- **Speed:** ~30-60 seconds per simulation
+- **Batch:** Processes entire directories autonomously
+- **Efficiency:** Works while you continue other tasks
+
+**Integration with Training-Free GRPO:**
+1. Run batch simulations with workflow V{N}
+2. **Use simulation-evaluator subagent** to analyze all results
+3. Aggregate semantic advantages and critical improvements
+4. Update workflow prompt with learned principles
+5. Create V{N+1} and re-test
+
+**Example Invocations:**
+
+*After batch testing:*
+```
+User: "The V6 batch test finished. 5 simulations complete."
+Claude: "Great! Let me use the simulation-evaluator subagent to analyze all 5 simulations."
+[Invokes Task tool with simulation-evaluator]
+```
+
+*Comparing versions:*
+```
+User: "I want to compare V5 and V6 performance."
+Claude: "I'll use the simulation-evaluator to analyze both batch directories."
+[Invokes Task tool twice - once for V5 directory, once for V6 directory]
+```
+
+*Pre-production validation:*
+```
+User: "Is the V6 workflow ready for production?"
+Claude: "Let me evaluate the test simulations to verify production readiness."
+[Invokes Task tool with simulation-evaluator]
+```
+
+**`evaluate_simulation.py`** - Workflow performance evaluation tool (**UPDATED - 2025-10-22**)
+- **Critical workflow analysis** - Evaluates ONLY the workflow agent (personas are test inputs)
+- **Tegra voice audit** - Flags embellishment, excessive warmth, therapy-speak, verbosity
+- **Content execution tracking** - Verifies all daily curriculum objectives were met
+- **Actionable prompt fixes** - Provides EXACT text to add to workflow prompt with examples
+- **Training-Free GRPO aligned** - Extracts what works and what doesn't for iterative improvement
+- **Agent caching** - Save and reuse evaluation agents for improved efficiency
+- Usage:
+  ```bash
+  # Basic evaluation (creates new agent each time)
+  docker exec integro_simulation_backend python evaluate_simulation.py \
+      --simulation "path/to/simulation.json" \
+      --workflow "path/to/workflow.md"
+
+  # Save agent to database for reuse (first run)
+  docker exec integro_simulation_backend python evaluate_simulation.py \
+      --simulation "path/to/simulation.json" \
+      --workflow "path/to/workflow.md" \
+      --save-agent
+
+  # Reuse existing agent from database (subsequent runs - faster!)
+  docker exec integro_simulation_backend python evaluate_simulation.py \
+      --simulation "path/to/simulation.json" \
+      --workflow "path/to/workflow.md" \
+      --agent-id simulation_evaluator_workflow_1
+
+  # With custom instructions and agent reuse
+  docker exec integro_simulation_backend python evaluate_simulation.py \
+      --simulation "Agents/batch_simulations/roots_v3_test/paul_simulation.json" \
+      --workflow "Agents/roots_of_healing_workflow_3.md" \
+      --agent-id simulation_evaluator_workflow_1 \
+      --instructions "Focus on resistance handling and completion enforcement"
+
+  # Custom output location
+  docker exec integro_simulation_backend python evaluate_simulation.py \
+      --simulation "path/to/simulation.json" \
+      --workflow "path/to/workflow.md" \
+      --agent-id simulation_evaluator_workflow_1 \
+      --output "reports/custom_analysis.json"
+  ```
+
+**Output Structure:**
+- Saves to: `[simulation_name]_analysis.json` (alongside simulation file by default)
+- **Overall Assessment:** Quality score (0-10), completion status, therapeutic alliance rating
+- **Highlights:** 3-10 moments that worked well (with turn IDs, quotes, principles extracted)
+- **Lowlights:** 2-5 areas for improvement (with constructive suggestions)
+- **Semantic Advantages:** 3-5 actionable principles extracted from successful moments
+- **Prompt Improvements:** Specific recommendations with exact text to add to workflow prompt
+- **Conversation Arc Analysis:** Opening/middle/closing quality assessment
+- **Persona Handling:** How well agent adapted to persona archetype
+
+**Evaluation Dimensions:**
+1. **Tegra Voice Adherence** - Direct/plainspoken, grounded/steady, no embellishment or excessive warmth
+2. **Content Execution** - Delivered core teaching, covered all activity questions, created artifact
+3. **Conversation Flow** - Stayed on track, handled resistance, maintained efficiency
+4. **Critical Violations** - Therapy-speak, stage directions, verbosity, taking over vs. empowering
+
+**Example Analysis Output:**
+```json
+{
+  "overall_assessment": {
+    "quality_score": 3.5,
+    "tegra_voice_score": 2.0,
+    "content_execution_score": 1.0,
+    "summary": "Workflow missed Day 1 objectives. Zero Tegra voice adherence - verbose, therapeutic, warm vs. grounded/direct."
+  },
+  "tegra_voice_analysis": {
+    "violations": [
+      {
+        "turn_id": "user1",
+        "violation_type": "therapy_speak",
+        "snippet": "Your nervous system is still flying those missions...",
+        "why_problematic": "Classic trauma therapy language, not Tegra's plainspoken style",
+        "tegra_alternative": "Your body is still in flight mode. That makes sense."
+      }
+    ]
+  },
+  "content_execution_analysis": {
+    "teaching_delivered": "no",
+    "activity_questions_covered": [
+      {"question": "What images come to mind?", "covered": false},
+      {"question": "Healing as fixing?", "covered": false}
+    ],
+    "missing_elements": ["All 4 reflection questions", "Core teaching", "Artifact"]
+  },
+  "critical_improvements": [
+    {
+      "issue_category": "tegra_voice",
+      "problem": "Responses are verbose, therapeutic, warm",
+      "prompt_fix": "Add: 'When user shares trauma, respond with MAX 2 sentences. AVOID: nervous system, healing journey. Instead: That makes sense. What's your move?'",
+      "example_better_response": "Your body remembers. That tracks. What's your move?"
+    }
+  ]
+}
+```
+
+**When to Use:**
+- **Post-batch testing:** Evaluate all simulations after running batch tests
+- **Workflow iteration:** Identify specific Tegra voice violations and content delivery failures
+- **A/B comparison:** Compare V2 vs V3 workflow performance against Tegra standards
+- **Prompt optimization:** Extract EXACT prompt fixes to improve workflow (Training-Free GRPO)
+- **Pre-production validation:** Ensure workflow maintains Tegra voice and delivers curriculum
+
+**Evaluator Philosophy:**
+- **Critical, not validating** - Designed to find what's broken, not celebrate what worked
+- **Workflow-focused** - Evaluates ONLY the workflow agent; personas are test inputs
+- **Evidence-based** - Every critique includes turn IDs, quotes, and specific fixes
+- **Actionable** - Provides exact prompt text to add, not vague suggestions
+
+**Performance:**
+- **Speed:** ~30-60 seconds per evaluation (LLM inference dominates, but agent setup is optimized with caching)
+- **Cost:** ~$0.01-0.03 per evaluation (Groq/Moonshot Kimi-K2)
+- **Model:** Uses `moonshotai/kimi-k2-instruct-0905` at temperature=0.3 for consistent analysis
+- **Parallelizable:** Can run multiple evaluations concurrently
+- **Efficiency:** Use `--save-agent` on first run, then `--agent-id` for subsequent runs to reuse cached agent
+
+**Integration with Training-Free GRPO:**
+The evaluation tool is designed to support iterative prompt optimization:
+1. **Run batch simulations** with current workflow version
+2. **Evaluate each simulation** to extract semantic advantages
+3. **Aggregate insights** across all personas
+4. **Update workflow prompt** with learned principles
+5. **Re-test and iterate** for 2-3 epochs
+
+See `/home/ben/integro-content/SIMULATION_EVALUATION_TOOL.md` and `/home/ben/integro-content/Agents/Training_Free_GRPO_summarization.md` for complete documentation.
 
 ### Development Tools
 
@@ -384,6 +727,9 @@ integro-content/
 ├── .claude/CLAUDE.md                    # This file
 ├── Agents/
 │   ├── batch_simulations/               # Simulation outputs (JSON + MD)
+│   ├── simulations/                     # Historical simulations (470+ files)
+│   ├── test_simulations/                # Test simulation outputs
+│   ├── knowledge/                       # Knowledge base documents (PDFs, EPUBs, etc.)
 │   ├── personas/                        # Persona definitions & research (13 total)
 │   │   ├── BASE_PERSONA_TEMPLATE_v2.1.md                        # Production template
 │   │   ├── PERSONA_REFERENCE_GUIDE.md                           # Detailed seeds for all personas
@@ -404,7 +750,9 @@ integro-content/
 │   │   ├── Chloe_Park_Manipulative_Persona_1.md                 # Korean-American narcissistic
 │   │   └── Jack_Kowalski_Violence_Risk_Persona_1.md             # Polish-American veteran
 │   ├── intentions_workflow_8.md         # Pre-journey intention-setting (Tegra)
-│   ├── roots_of_healing_workflow_1.md   # Daily curriculum Week 1 Day 1 (Tegra)
+│   ├── roots_of_healing_workflow_1.md   # Daily curriculum Week 1 Day 1 V1 (Tegra)
+│   ├── roots_of_healing_workflow_2.md   # Daily curriculum Week 1 Day 1 V2 (no YAML shown)
+│   ├── roots_of_healing_workflow_3.md   # Daily curriculum Week 1 Day 1 V3 (completion enforcement)
 │   ├── tegra_voice.md                   # Tegra voice card & guidelines
 │   └── tegra_guidelines.md              # Tegra conversation arc guidelines
 ├── FINAL INTEGRO CONTENT/               # 54 weeks of curriculum
@@ -428,7 +776,11 @@ integro-content/
 ├── test_mixed_persona_batch.py          # Intentions workflow batch test
 ├── test_async_batch_simulations.py      # Async batch testing
 ├── convert_simulation_to_markdown.py    # MD conversion tool
-├── create_agent_from_md.py              # Create agents from markdown
+├── create_agent_from_md.py              # Create agents from markdown (with knowledge base support)
+├── simulation_viewer.py                 # Web-based simulation viewer (port 8890)
+├── create_roots_with_knowledge.py       # Helper script for creating agents with KB
+├── run_roots_v2_batch.sh                # Batch test script for V2 workflow
+├── run_roots_v3_batch.sh                # Batch test script for V3 workflow
 ├── python-docx_mapping.md               # API reference for parsing DOCX
 ├── docker-compose.yaml                  # Local dev stack
 ├── pyproject.toml                       # Python dependencies
@@ -447,6 +799,7 @@ make docker-build && make docker-up
 # - Backend: http://localhost:8888
 # - Frontend: http://localhost:8889
 # - Qdrant: http://localhost:6333
+# - Simulation Viewer: http://localhost:8890
 
 # 3. Run single simulation test
 docker exec integro_simulation_backend python test_two_agent_simulation.py \
@@ -463,6 +816,12 @@ docker exec integro_simulation_backend python test_roots_healing_batch.py
 # Batch: Agents/batch_simulations/roots_healing_all_personas_YYYYMMDD_HHMMSS/
 # - *.json for machine processing
 # - *.md for human review
+
+# 6. Start simulation viewer
+docker exec -d integro_simulation_backend python simulation_viewer.py
+# Then visit http://localhost:8890
+# - Select "Most Recent" to see latest simulations first
+# - Browse through 470+ simulations with dropdown selector
 ```
 
 ---
@@ -512,13 +871,41 @@ docker exec integro_simulation_backend python test_roots_healing_batch.py
 - [x] Parsed Week 1 Day 1 content from DOCX (2025-10-20)
 - [x] Created workflow structure with Option A (reflection) and Option B (reading) paths (2025-10-20)
 - [x] Tested workflow with Ellen Persona 4 - successful therapeutic depth achieved (2025-10-20)
+- [x] Created Roots of Healing V2 - Fixed YAML display issue, never shows code to users (2025-10-20)
+- [x] Created knowledge base with 5,393 chunks from 4 therapeutic books (2025-10-21)
+  - Gabor Maté - When the Body Says No
+  - Rupert Ross - Indigenous Healing
+  - Carl Jung - Memories, Dreams, Reflections
+  - Integration principles guide
+- [x] Linked V2 and V3 workflows to knowledge base for enhanced responses (2025-10-21)
+- [x] Created Roots of Healing V3 - Added completion enforcement to ensure daily reflection (2025-10-21)
+- [x] Batch tested V2 and V3 with 5 diverse personas - 100% completion rate (2025-10-21)
+- [x] Verified Agno knowledge integration working - agents can use RAG features (2025-10-22)
+  - Fixed Qdrant URL configuration for Docker (http://qdrant:6333)
+  - Fixed Document import path in agno_knowledge.py
+  - Confirmed search_knowledge_base() tool available to agents
+  - Tested semantic search returning relevant documents
 - [ ] Create workflows for remaining 377 days of curriculum
 - [ ] Build workflow templates for different activity types
+
+**Simulation Viewer:**
+- [x] Created web-based viewer for browsing simulations (2025-10-21)
+- [x] Added multi-directory scanning (simulations/, batch_simulations/, test_simulations/) (2025-10-21)
+- [x] Implemented "Most Recent" sort option for finding latest tests (2025-10-21)
+- [x] 470+ simulations available in dropdown selector (2025-10-21)
 
 ---
 
 **Repository**: https://github.com/Integro-today/integro-content
-**Last Updated**: 2025-10-20
-**Status**: Production simulation system active with 100+ successful test runs. Daily curriculum workflow system launched.
+**Last Updated**: 2025-10-22
+**Status**: Production simulation system active with 100+ successful test runs. Daily curriculum workflow system with knowledge base integration launched. **✅ Agno Knowledge/RAG features fully integrated and verified working.**
 **Persona System**: v2.1 benchmark-quality template with **13 production personas** covering diverse demographics and therapeutic challenges
-**Workflow Agents**: 2 production agents (Intentions Workflow 8, Roots of Healing Workflow 1)
+**Workflow Agents**: 4 production agents:
+  - Intentions Workflow 8
+  - Roots of Healing Workflow 1 (original)
+  - Roots of Healing Workflow 2 (with 5,393-chunk knowledge base)
+  - Roots of Healing Workflow 3 (with knowledge base + completion enforcement)
+**Knowledge Base**: 5,393 chunks from 4 therapeutic books (Maté, Ross, Jung, integration principles)
+**Agno Integration**: ✅ Knowledge bases fully working with Agno's RAG features - agents can semantically search knowledge during conversations
+**Simulation Viewer**: Web-based viewer on port 8890 with 470+ simulations, sort by most recent
+**Agent Creation**: Enhanced with knowledge base support - attach PDFs, EPUBs, DOCX to agents during creation
