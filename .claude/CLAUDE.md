@@ -65,12 +65,11 @@ docker exec -d integro_simulation_backend python simulation_viewer.py
 
 ## Current Agents
 
-### Workflow Agents (4 Total)
+### Workflow Agents (Latest: V9/V12)
 
 - **Intentions Workflow 8** - Pre-journey intention-setting (Tegra voice)
-- **Roots of Healing Workflow 1** - Daily curriculum Week 1 Day 1 (original)
-- **Roots of Healing Workflow 2** - V2 with no YAML shown + 5,393-chunk knowledge base
-- **Roots of Healing Workflow 3** - V3 with completion enforcement + knowledge base
+- **Roots of Healing Workflow 1-11** - Day 1 curriculum iterations (Groq)
+- **Roots of Healing Workflow 12 (V9)** - Latest: Improved grammar, workflow-first order, DeepInfra Kimi K2, verbatim curriculum content, knowledge base integration (5,390 chunks from Maté, Ross, Jung)
 
 ### Persona Agents (13 Total)
 
@@ -346,16 +345,21 @@ integro-content/
 
 **Last Updated**: 2025-10-23
 
-**Status**: Production simulation system active with 100+ successful test runs. Daily curriculum workflow system with knowledge base integration launched. ✅ Agno Knowledge/RAG features fully integrated and verified working.
+**Status**: Production simulation system with 500+ successful test runs. Latest: Workflow V9/V12 (DeepInfra Kimi K2) tested across all 13 personas with 100% success rate.
 
-**Persona System**: v2.1 benchmark-quality template with **13 production personas** covering diverse demographics and therapeutic challenges
+**Workflow System**: Roots of Healing V12 with improved grammar, workflow-first conversation order, verbatim curriculum content, and integrated knowledge base (5,390 chunks)
 
-**Workflow Agents**: 4 production agents (Intentions V8, Roots of Healing V1-V3)
+**Persona System**: 13 production personas covering diverse demographics and therapeutic challenges
 
-**Knowledge Base**: 5,393 chunks from 4 therapeutic books (Maté, Ross, Jung, integration principles)
+**Knowledge Base Infrastructure**: ✅ Dual-storage architecture (PostgreSQL + Qdrant) with intelligent reuse - automatically detects and reuses existing KBs with matching documents
 
-**Agno Integration**: ✅ Knowledge bases fully working with Agno's RAG features - agents can semantically search knowledge during conversations
+**Model Support**: Groq (Kimi K2 Instruct) and DeepInfra (moonshotai/Kimi-K2-Instruct-0905)
 
-**Simulation Viewer**: Web-based viewer on port 8890 with 470+ simulations, sort by most recent
+**Simulation Viewer**: Web-based viewer on port 8890, outputs in `Agents/simulations/batch_simulations/`
 
-**Agent Creation**: Enhanced with knowledge base support - attach PDFs, EPUBs, DOCX to agents during creation
+**Recent Improvements (2025-10-23)**:
+- Knowledge base creation now properly populates both PostgreSQL (frontend display) and Qdrant (agent search)
+- Knowledge base reuse prevents duplicate uploads when using same source documents
+- DeepInfra provider support added to ModelConfig
+- Workflow-first conversation order (workflow greets user, persona responds)
+- Batch simulation system supports 4 concurrent executions

@@ -10,7 +10,7 @@ from dotenv import load_dotenv
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect, HTTPException, UploadFile, File, Form
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, HTMLResponse
 from pydantic import BaseModel, Field
 from pathlib import Path
 import tempfile
@@ -26,6 +26,9 @@ from integro.utils.document_processor import DocumentProcessor
 from integro.utils.railway_health import RailwayHealthChecker, railway_startup_check
 
 logger = get_logger(__name__)
+
+# Global simulation viewer state
+AVAILABLE_SIMULATIONS: List[Dict[str, Any]] = []
 
 # Import LiveKit API
 try:
@@ -1909,6 +1912,336 @@ async def websocket_endpoint(websocket: WebSocket, client_id: str):
     except Exception as e:
         logger.error(f"WebSocket error: {e}")
         manager.disconnect(client_id)
+
+
+def scan_simulations_directory() -> List[Dict[str, Any]]:
+    """Scan for all simulation JSON files."""
+    simulation_dirs = [
+        Path("Agents/simulations"),
+        Path("Agents/batch_simulations"),
+        Path("Agents/test_simulations")
+    ]
+
+    all_simulations = []
+    base_dir = Path("Agents")
+
+    for sim_dir in simulation_dirs:
+        if sim_dir.exists():
+            for json_file in sim_dir.rglob('*.json'):
+                if 'simulation' in json_file.name.lower():
+                    all_simulations.append({
+                        'path': str(json_file),
+                        'name': json_file.name,
+                        'relative_path': str(json_file.relative_to(base_dir)),
+                        'mtime': json_file.stat().st_mtime
+                    })
+
+    return all_simulations
+
+
+def load_simulation_data(file_path: Path) -> Dict[str, Any]:
+    """Load simulation JSON file."""
+    with open(file_path, 'r') as f:
+        return json.load(f)
+
+
+def extract_simulation_messages(sim_data: Dict[str, Any]) -> List[Dict[str, Any]]:
+    """Extract and order messages from simulation data."""
+    messages = []
+    max_turns = sim_data.get('max_turns', 20)
+
+    for i in range(max_turns):
+        system_key = f'system{i}'
+        if system_key in sim_data and sim_data[system_key]:
+            messages.append({
+                'role': 'system',
+                'content': sim_data[system_key],
+                'index': i
+            })
+
+        user_key = f'user{i}'
+        if user_key in sim_data and sim_data[user_key]:
+            messages.append({
+                'role': 'user',
+                'content': sim_data[user_key],
+                'index': i
+            })
+
+    return messages
+
+
+@app.get("/api/simulations/list")
+async def list_simulations_api(sort_by: str = "path"):
+    """List all available simulations."""
+    global AVAILABLE_SIMULATIONS
+
+    # Refresh simulation list
+    AVAILABLE_SIMULATIONS = scan_simulations_directory()
+
+    simulations = AVAILABLE_SIMULATIONS.copy()
+
+    if sort_by == "recent":
+        simulations = sorted(simulations, key=lambda x: x['mtime'], reverse=True)
+
+    return {
+        'simulations': simulations,
+        'count': len(simulations)
+    }
+
+
+@app.get("/api/simulations/data")
+async def get_simulation_data(path: str):
+    """Get specific simulation data."""
+    file_path = Path(path)
+    if not file_path.exists():
+        raise HTTPException(status_code=404, detail="Simulation file not found")
+
+    sim_data = load_simulation_data(file_path)
+    messages = extract_simulation_messages(sim_data)
+
+    return {
+        'metadata': {
+            'session': sim_data.get('session', 'N/A'),
+            'datetime': sim_data.get('datetime', 'N/A'),
+            'notes': sim_data.get('notes', ''),
+            'seed_message': sim_data.get('seed_message', ''),
+            'system_agent_id': sim_data.get('system_agent_id', 'Unknown'),
+            'user_agent_id': sim_data.get('user_agent_id', 'Unknown'),
+            'max_turns': sim_data.get('max_turns', 0),
+            'message_count': len(messages)
+        },
+        'messages': messages
+    }
+
+
+@app.get("/simulations", response_class=HTMLResponse)
+async def simulations_viewer():
+    """Serve the simulation viewer HTML."""
+    return """<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulation Viewer</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', sans-serif;
+            background: #f5f5f5; color: #333; line-height: 1.6;
+        }
+        .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+        .header {
+            background: white; padding: 20px; border-radius: 8px;
+            margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .header h1 { font-size: 24px; margin-bottom: 10px; color: #2c3e50; }
+        .metadata {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px; margin-top: 15px; padding: 15px;
+            background: #f8f9fa; border-radius: 4px;
+        }
+        .metadata-item { font-size: 14px; }
+        .metadata-label { font-weight: 600; color: #555; margin-right: 8px; }
+        .metadata-value { color: #333; }
+        .simulation-controls {
+            display: grid; grid-template-columns: 1fr auto;
+            gap: 10px; margin-bottom: 15px;
+        }
+        .simulation-selector select, .sort-selector select {
+            width: 100%; padding: 10px; font-size: 14px;
+            border: 1px solid #ddd; border-radius: 4px; background: white;
+        }
+        .sort-selector { min-width: 200px; }
+        .sort-selector label {
+            display: block; font-size: 12px; font-weight: 600;
+            color: #555; margin-bottom: 4px;
+        }
+        .chat-container {
+            background: white; border-radius: 8px; padding: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1); min-height: 500px;
+        }
+        .message {
+            margin-bottom: 24px; display: flex; flex-direction: column;
+        }
+        .message.system { align-items: flex-start; }
+        .message.user { align-items: flex-end; }
+        .message-header {
+            font-size: 12px; font-weight: 600; margin-bottom: 6px;
+            text-transform: uppercase; letter-spacing: 0.5px;
+        }
+        .message.system .message-header { color: #3498db; }
+        .message.user .message-header { color: #27ae60; }
+        .message-bubble {
+            max-width: 80%; padding: 12px 16px; border-radius: 12px;
+            white-space: pre-wrap; word-wrap: break-word;
+            font-size: 15px; line-height: 1.5; text-align: left;
+        }
+        .message.system .message-bubble {
+            background: #e3f2fd; border: 1px solid #90caf9;
+        }
+        .message.user .message-bubble {
+            background: #e8f5e9; border: 1px solid #a5d6a7;
+        }
+        .loading { text-align: center; padding: 40px; font-size: 18px; color: #666; }
+        .error {
+            background: #ffebee; color: #c62828; padding: 16px;
+            border-radius: 4px; margin: 20px 0; border: 1px solid #ef5350;
+        }
+        .message-index { font-size: 11px; color: #999; margin-left: 8px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔬 Simulation Viewer</h1>
+            <div id="simulation-selector-container"></div>
+            <div id="metadata-container"></div>
+        </div>
+        <div class="chat-container">
+            <div id="messages-container" class="loading">Loading simulations...</div>
+        </div>
+    </div>
+    <script>
+        let availableSimulations = [];
+        let currentSortOrder = 'path';
+        let currentSelectedPath = null;
+
+        async function loadSimulationsList(sortBy = 'path') {
+            try {
+                const response = await fetch(`/api/simulations/list?sort_by=${sortBy}`);
+                const data = await response.json();
+                availableSimulations = data.simulations;
+                currentSortOrder = sortBy;
+
+                if (availableSimulations.length > 0) {
+                    renderSimulationSelector();
+                    if (!currentSelectedPath) {
+                        currentSelectedPath = availableSimulations[0].path;
+                    }
+                    loadSimulation(currentSelectedPath);
+                } else {
+                    document.getElementById('messages-container').innerHTML =
+                        '<div class="error">No simulation files found</div>';
+                }
+            } catch (error) {
+                console.error('Error loading simulations list:', error);
+                document.getElementById('messages-container').innerHTML =
+                    `<div class="error">Error loading simulations: ${error.message}</div>`;
+            }
+        }
+
+        function renderSimulationSelector() {
+            const container = document.getElementById('simulation-selector-container');
+            const html = `
+                <div class="simulation-controls">
+                    <div class="simulation-selector">
+                        <select id="simulation-select" onchange="onSimulationChange()">
+                            ${availableSimulations.map(sim => `
+                                <option value="${sim.path}" ${sim.path === currentSelectedPath ? 'selected' : ''}>
+                                    ${sim.relative_path}
+                                </option>
+                            `).join('')}
+                        </select>
+                    </div>
+                    <div class="sort-selector">
+                        <label for="sort-select">Sort by:</label>
+                        <select id="sort-select" onchange="onSortChange()">
+                            <option value="path" ${currentSortOrder === 'path' ? 'selected' : ''}>Path (A-Z)</option>
+                            <option value="recent" ${currentSortOrder === 'recent' ? 'selected' : ''}>Most Recent</option>
+                        </select>
+                    </div>
+                </div>
+            `;
+            container.innerHTML = html;
+        }
+
+        function onSimulationChange() {
+            const select = document.getElementById('simulation-select');
+            currentSelectedPath = select.value;
+            loadSimulation(currentSelectedPath);
+        }
+
+        function onSortChange() {
+            const select = document.getElementById('sort-select');
+            loadSimulationsList(select.value);
+        }
+
+        async function loadSimulation(path) {
+            const messagesContainer = document.getElementById('messages-container');
+            messagesContainer.innerHTML = '<div class="loading">Loading simulation...</div>';
+
+            try {
+                const response = await fetch(`/api/simulations/data?path=${encodeURIComponent(path)}`);
+                if (!response.ok) throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+
+                const data = await response.json();
+                renderMetadata(data.metadata);
+                renderMessages(data.messages);
+            } catch (error) {
+                messagesContainer.innerHTML = `
+                    <div class="error">
+                        <strong>Error loading simulation:</strong><br>${error.message}
+                    </div>
+                `;
+            }
+        }
+
+        function renderMetadata(metadata) {
+            const container = document.getElementById('metadata-container');
+            container.innerHTML = `
+                <div class="metadata">
+                    <div class="metadata-item">
+                        <span class="metadata-label">Session:</span>
+                        <span class="metadata-value">${metadata.session}</span>
+                    </div>
+                    <div class="metadata-item">
+                        <span class="metadata-label">Workflow Agent:</span>
+                        <span class="metadata-value">${metadata.system_agent_id}</span>
+                    </div>
+                    <div class="metadata-item">
+                        <span class="metadata-label">Persona Agent:</span>
+                        <span class="metadata-value">${metadata.user_agent_id}</span>
+                    </div>
+                    <div class="metadata-item">
+                        <span class="metadata-label">Messages:</span>
+                        <span class="metadata-value">${metadata.message_count} (${metadata.max_turns} rounds)</span>
+                    </div>
+                    <div class="metadata-item">
+                        <span class="metadata-label">Timestamp:</span>
+                        <span class="metadata-value">${metadata.datetime}</span>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderMessages(messages) {
+            const container = document.getElementById('messages-container');
+            if (messages.length === 0) {
+                container.innerHTML = '<div class="loading">No messages found</div>';
+                return;
+            }
+
+            const html = messages.map(msg => {
+                const roleLabel = msg.role === 'system' ? 'Workflow' : 'Persona';
+                const escaped = document.createElement('div');
+                escaped.textContent = msg.content;
+                return `
+                    <div class="message ${msg.role}">
+                        <div class="message-header">
+                            ${roleLabel}<span class="message-index">#${msg.index}</span>
+                        </div>
+                        <div class="message-bubble">${escaped.innerHTML}</div>
+                    </div>
+                `;
+            }).join('');
+
+            container.innerHTML = html;
+        }
+
+        loadSimulationsList();
+    </script>
+</body>
+</html>"""
 
 
 async def load_agent_for_client(client_id: str, agent_id: str, kb_id: Optional[str] = None):
